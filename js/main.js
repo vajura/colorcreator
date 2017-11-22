@@ -1,18 +1,17 @@
 var pixelField;
 var activePixels;
 var ColorPixel = /** @class */ (function () {
-    function ColorPixel(xPos, yPos, stage) {
+    function ColorPixel(xPos, yPos) {
         this.xPos = xPos;
         this.yPos = yPos;
-        this.stage = stage;
         this.pixel = new createjs.Shape();
         this.pixel.x = this.xPos;
         this.pixel.y = this.yPos;
-    }
-    ColorPixel.prototype.activatePixel = function () {
         this.pixel.graphics.beginFill("#0000FF").drawRect(0, 0, 1, 1);
-        this.pixel.cache(0, 0, 1, 1);
-        this.stage.addChild(this.pixel);
+        //this.pixel.cache(0,0,1,1);
+    }
+    ColorPixel.prototype.activatePixel = function (stage) {
+        stage.addChild(this.pixel);
     };
     return ColorPixel;
 }());
@@ -50,23 +49,52 @@ function createSpiralArray(x, y) {
 }
 //TODO CHECK IF COLORING AND PUTTING EVERY PIXEL ON SCREEN AND THEN JUST CHANGING COLOR IS FASTER
 function start() {
-    var stage = new createjs.Stage("container");
     var stageSize = 400;
+    var stageSizeX2 = stageSize * stageSize;
     pixelField = [];
     for (var a = 0; a < stageSize; a++) {
         pixelField[a] = [];
         for (var b = 0; b < stageSize; b++) {
-            pixelField[a][b] = new ColorPixel(b, a, stage);
+            pixelField[a][b] = new ColorPixel(b, a);
         }
     }
     var spiralArray = createSpiralArray(stageSize / 2 - 1, stageSize / 2 - 1);
-    stage.update();
     var counter = 0;
-    createjs.Ticker.timingMode = createjs.Ticker.RAF_SYNCHED;
-    createjs.Ticker.framerate = 30;
-    createjs.Ticker.on("tick", function () {
-        pixelField[spiralArray[counter].y][spiralArray[counter].x].activatePixel();
-        counter++;
-        stage.update();
-    });
+    var secondCounter = 0;
+    //createjs.Ticker.timingMode = createjs.Ticker.RAF_SYNCHED;
+    createjs.Ticker.framerate = 60;
+    var oldTime = 0;
+    var canv = document.getElementById("container0");
+    var ctx = canv.getContext("2d");
+    var imageData = ctx.createImageData(stageSize, stageSize);
+    var data32 = new Uint32Array(imageData.data.buffer);
+    var imageData2 = ctx.createImageData(stageSize, stageSize);
+    var data322 = new Uint32Array(imageData.data.buffer);
+    var interval = 1000 / 60;
+    var drawsPerTick = 60;
+    var drawsPerTickIncreaseCounter = 1;
+    var drawsPerTickCheckNumber = drawsPerTickCheckCalculation(stageSizeX2, drawsPerTickIncreaseCounter); //"hashed" value so it doesnt need to be calculated every cycle
+    setInterval(function () {
+        for (var a = 0; a < drawsPerTick; a++) {
+            data32[spiralArray[counter].x + spiralArray[counter].y * stageSize] = 0xFF0000FF; // set pixel to red
+            counter += 4;
+        }
+        if (counter > stageSizeX2) {
+            drawsPerTick = 60;
+            drawsPerTickIncreaseCounter = 1;
+            drawsPerTickCheckNumber = drawsPerTickCheckCalculation(stageSizeX2, drawsPerTickIncreaseCounter);
+            secondCounter++;
+            counter = secondCounter;
+        }
+        if (counter > drawsPerTickCheckNumber) {
+            console.log(counter);
+            drawsPerTick += 30;
+            drawsPerTickIncreaseCounter++;
+            drawsPerTickCheckNumber = drawsPerTickCheckCalculation(stageSizeX2, drawsPerTickIncreaseCounter);
+        }
+        ctx.putImageData(imageData, 0, 0);
+    }, interval);
+}
+function drawsPerTickCheckCalculation(stageSizeX2, drawsPerTickIncreaseCounter) {
+    return stageSizeX2 / 10 * drawsPerTickIncreaseCounter;
 }
