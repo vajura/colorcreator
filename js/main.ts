@@ -30,7 +30,9 @@ function createSpiralArray(x: number, y: number) {
 	directionArray[1] = {x: 0, y: 1};
 	directionArray[2] = {x: -1, y: 0};
 	directionArray[3] = {x: 0, y: -1};
-
+	/*array.push({x: x, y: y});
+	x -= 1;
+	y -= 1;*/
 	while (x >= 0) {
 		array.push({x: x, y: y});
 		distanceCounter++;
@@ -43,7 +45,7 @@ function createSpiralArray(x: number, y: number) {
 			} else if (direction == 4) {
 				y -= 2;
 				x -= 2;
-				distance+=2;
+				distance += 2;
 				distanceCounter = -1;
 				direction = 0;
 			}
@@ -66,48 +68,52 @@ function start() {
 		}
 	}
 
-	let spiralArray = createSpiralArray(stageSize/2 - 1, stageSize/2 - 1);
+	let spiralArray = createSpiralArray(stageSize/2 - 1 , stageSize/2 - 1);
 
 	let counter = 0;
-	let secondCounter = 0;
-	//createjs.Ticker.timingMode = createjs.Ticker.RAF_SYNCHED;
-	createjs.Ticker.framerate = 60;
-	let oldTime = 0;
 
 	let canv = <HTMLCanvasElement>document.getElementById("container0");
     let ctx = canv.getContext("2d");
 
 	const imageData = ctx.createImageData(stageSize, stageSize);
 	const data32 = new Uint32Array(imageData.data.buffer);
-	const imageData2 = ctx.createImageData(stageSize, stageSize);
-	const data322 = new Uint32Array(imageData.data.buffer);
 	
 	let interval = 1000/60;
-	let drawsPerTick = 60;
-	let drawsPerTickIncreaseCounter = 1;
-	let drawsPerTickCheckNumber = drawsPerTickCheckCalculation(stageSizeX2, drawsPerTickIncreaseCounter); //"hashed" value so it doesnt need to be calculated every cycle
-	setInterval(function() {
+	let drawsPerTick = 8;
+	let intervalCounter = 4;
+	let counterSteps = 5;
+	let nextStep = 1;
+	let intervalIndex = setInterval(function() {
 		for(let a = 0; a < drawsPerTick; a++) {
-			data32[spiralArray[counter].x+spiralArray[counter].y*stageSize] = 0xFF0000FF;  // set pixel to red
-			counter += 4;
+			data32[spiralArray[counter].x + spiralArray[counter].y * stageSize] = 0xFFFF0000;//A
+			counter += counterSteps;
 		}
-		if(counter > stageSizeX2) {
+		//if(counterSteps > drawsPerTick)
+		drawsPerTick = Math.floor(intervalCounter * 4 / counterSteps - nextStep + 1);
+		intervalCounter += 2;
+		if (intervalCounter > stageSize+2 ) {
+			intervalCounter = 4;
+			if (nextStep <= counterSteps) {
+				nextStep++;
+				counter = nextStep;
+				drawsPerTick = Math.floor(intervalCounter * 4 / counterSteps - nextStep + 1);
+			} else {
+				clearInterval(intervalIndex);
+			}
+		}
+
+		/*if(counter > drawsPerTickCheckNumber - drawsPerTick * 2) {
+			drawsPerTick += 60;
+			drawsPerTickIncreaseCounter++;
+			drawsPerTickCheckNumber = drawsPerTickCheckCalculation(stageSizeX2, drawsPerTickIncreaseCounter);
+		}
+		if(counter > stageSizeX2 - drawsPerTick*2) {
 			drawsPerTick = 60;
 			drawsPerTickIncreaseCounter = 1;
 			drawsPerTickCheckNumber = drawsPerTickCheckCalculation(stageSizeX2, drawsPerTickIncreaseCounter);
 			secondCounter++;
 			counter = secondCounter;
-		}
-		if(counter > drawsPerTickCheckNumber) {
-			console.log(counter);
-			drawsPerTick += 30;
-			drawsPerTickIncreaseCounter++;
-			drawsPerTickCheckNumber = drawsPerTickCheckCalculation(stageSizeX2, drawsPerTickIncreaseCounter);
-		}
-		ctx.putImageData(imageData,0,0);
+		}*/
+		ctx.putImageData(imageData, 0, 0);
 	}, interval)
-}
-
-function drawsPerTickCheckCalculation(stageSizeX2, drawsPerTickIncreaseCounter) {
-	return stageSizeX2 / 10 * drawsPerTickIncreaseCounter;
 }
