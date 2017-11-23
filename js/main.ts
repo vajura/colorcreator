@@ -1,6 +1,13 @@
 declare var createjs;
 declare var $;
 
+class Pixel {
+	public color;
+	constructor(public weight: number, public liveNeighbours: Array<Pixel>, public deadNeighbours: Array<Pixel>) {
+
+	}
+}
+
 function createSpiralArray(x: number, y: number) {
 	let array = [];
 	let distance = 2;
@@ -37,13 +44,24 @@ function createSpiralArray(x: number, y: number) {
 	return array;
 }
 
+function createPixels(x: number, y: number, weight: number, color, live: boolean, livePixels: Array<Array<Pixel>>) {
+	
+}
+
 //TODO CHECK IF COLORING AND PUTTING EVERY PIXEL ON SCREEN AND THEN JUST CHANGING COLOR IS FASTER
 function start() {
 	let stageSize = 800;
 	let stageSizeX2 = stageSize * stageSize;
 
-	let spiralArray = createSpiralArray(stageSize/2 - 1 , stageSize/2 - 1);
+	let livePixels: Array<Array<Pixel>> = new Array<Array<Pixel>>();
+	for (let a = 0; a < 200; a++) {
+		livePixels[a] = new Array<Pixel>();
+	}
+	//createPixels(200, 200, 1, 0xFFFF0000, true);
 
+	
+
+	let spiralArray = createSpiralArray(stageSize/2 - 1 , stageSize/2 - 1);
 
 	let canv = <HTMLCanvasElement>document.getElementById("container0");
     let ctx = canv.getContext("2d");

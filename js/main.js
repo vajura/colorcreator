@@ -1,3 +1,11 @@
+var Pixel = /** @class */ (function () {
+    function Pixel(weight, liveNeighbours, deadNeighbours) {
+        this.weight = weight;
+        this.liveNeighbours = liveNeighbours;
+        this.deadNeighbours = deadNeighbours;
+    }
+    return Pixel;
+}());
 function createSpiralArray(x, y) {
     var array = [];
     var distance = 2;
@@ -33,10 +41,17 @@ function createSpiralArray(x, y) {
     }
     return array;
 }
+function createPixels(x, y, weight, color, live, livePixels) {
+}
 //TODO CHECK IF COLORING AND PUTTING EVERY PIXEL ON SCREEN AND THEN JUST CHANGING COLOR IS FASTER
 function start() {
     var stageSize = 800;
     var stageSizeX2 = stageSize * stageSize;
+    var livePixels = new Array();
+    for (var a = 0; a < 200; a++) {
+        livePixels[a] = new Array();
+    }
+    //createPixels(200, 200, 1, 0xFFFF0000, true);
     var spiralArray = createSpiralArray(stageSize / 2 - 1, stageSize / 2 - 1);
     var canv = document.getElementById("container0");
     var ctx = canv.getContext("2d");
@@ -55,7 +70,6 @@ function start() {
     colorArray[3] = 0xFFFFFF00;
     colorArray[4] = 0xFFFF00FF;
     colorArray[5] = 0xFF00FFFF;
-    colorArray[6] = 0xFF000000;
     var intervalIndex = setInterval(function () {
         for (var a = 0; a < drawsPerTick && counter < stageSizeX2; a++) {
             data32[spiralArray[counter].x + spiralArray[counter].y * stageSize] = 0xFFFF0000;
