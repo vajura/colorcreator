@@ -1,20 +1,3 @@
-var pixelField;
-var activePixels;
-var ColorPixel = /** @class */ (function () {
-    function ColorPixel(xPos, yPos) {
-        this.xPos = xPos;
-        this.yPos = yPos;
-        this.pixel = new createjs.Shape();
-        this.pixel.x = this.xPos;
-        this.pixel.y = this.yPos;
-        this.pixel.graphics.beginFill("#0000FF").drawRect(0, 0, 1, 1);
-        //this.pixel.cache(0,0,1,1);
-    }
-    ColorPixel.prototype.activatePixel = function (stage) {
-        stage.addChild(this.pixel);
-    };
-    return ColorPixel;
-}());
 function createSpiralArray(x, y) {
     var array = [];
     var distance = 2;
@@ -54,13 +37,6 @@ function createSpiralArray(x, y) {
 function start() {
     var stageSize = 400;
     var stageSizeX2 = stageSize * stageSize;
-    pixelField = [];
-    for (var a = 0; a < stageSize; a++) {
-        pixelField[a] = [];
-        for (var b = 0; b < stageSize; b++) {
-            pixelField[a][b] = new ColorPixel(b, a);
-        }
-    }
     var spiralArray = createSpiralArray(stageSize / 2 - 1, stageSize / 2 - 1);
     var counter = 0;
     var canv = document.getElementById("container0");
@@ -69,40 +45,31 @@ function start() {
     var data32 = new Uint32Array(imageData.data.buffer);
     var interval = 1000 / 60;
     var drawsPerTick = 8;
-    var intervalCounter = 4;
-    var counterSteps = 5;
-    var nextStep = 1;
+    var addToCounterPerTick = 666;
+    var counterStartingOffset = 1;
+    var drawsPerTickIncrease = 3;
+    var colorArray = new Uint32Array(addToCounterPerTick);
+    colorArray[0] = 0xFFFF0000;
+    colorArray[1] = 0xFF00FF00;
+    colorArray[2] = 0xFF0000FF;
+    colorArray[3] = 0xFF00FFFF;
+    colorArray[4] = 0xFFFFFF00;
+    colorArray[5] = 0xFFFF00FF;
     var intervalIndex = setInterval(function () {
-        for (var a = 0; a < drawsPerTick; a++) {
-            data32[spiralArray[counter].x + spiralArray[counter].y * stageSize] = 0xFFFF0000; //A
-            counter += counterSteps;
+        for (var a = 0; a < drawsPerTick && counter < stageSizeX2; a++) {
+            data32[spiralArray[counter].x + spiralArray[counter].y * stageSize] = colorArray[counterStartingOffset % 5]; //A
+            counter += addToCounterPerTick;
         }
-        //if(counterSteps > drawsPerTick)
-        drawsPerTick = Math.floor(intervalCounter * 4 / counterSteps - nextStep + 1);
-        intervalCounter += 2;
-        if (intervalCounter > stageSize + 2) {
-            intervalCounter = 4;
-            if (nextStep <= counterSteps) {
-                nextStep++;
-                counter = nextStep;
-                drawsPerTick = Math.floor(intervalCounter * 4 / counterSteps - nextStep + 1);
-            }
-            else {
+        if (counter >= stageSizeX2) {
+            if (counterStartingOffset == addToCounterPerTick) {
                 clearInterval(intervalIndex);
             }
+            counter = counterStartingOffset;
+            counterStartingOffset++;
+            drawsPerTickIncrease = 2;
         }
-        /*if(counter > drawsPerTickCheckNumber - drawsPerTick * 2) {
-            drawsPerTick += 60;
-            drawsPerTickIncreaseCounter++;
-            drawsPerTickCheckNumber = drawsPerTickCheckCalculation(stageSizeX2, drawsPerTickIncreaseCounter);
-        }
-        if(counter > stageSizeX2 - drawsPerTick*2) {
-            drawsPerTick = 60;
-            drawsPerTickIncreaseCounter = 1;
-            drawsPerTickCheckNumber = drawsPerTickCheckCalculation(stageSizeX2, drawsPerTickIncreaseCounter);
-            secondCounter++;
-            counter = secondCounter;
-        }*/
+        drawsPerTick = 500 + Math.floor(drawsPerTickIncrease * 128 / addToCounterPerTick);
+        drawsPerTickIncrease += 2;
         ctx.putImageData(imageData, 0, 0);
     }, interval);
 }
