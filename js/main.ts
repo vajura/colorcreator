@@ -54,7 +54,7 @@ function start() {
 	let counter = 0;
 	let interval = 1000/60;
 	let drawsPerTick = 8;
-	let addToCounterPerTick = 5;
+	let addToCounterPerTick = 1131;
 	let counterStartingOffset = 1;
 	let drawsPerTickIncrease = 3;
 
@@ -65,7 +65,6 @@ function start() {
 	colorArray[3] = 0xFFFFFF00;
 	colorArray[4] = 0xFFFF00FF;
 	colorArray[5] = 0xFF00FFFF;
-	colorArray[6] = 0xFF000000;
 
 	let intervalIndex = setInterval(function() {
 		for(let a = 0; a < drawsPerTick && counter < stageSizeX2; a++) {

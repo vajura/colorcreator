@@ -45,7 +45,7 @@ function start() {
     var counter = 0;
     var interval = 1000 / 60;
     var drawsPerTick = 8;
-    var addToCounterPerTick = 5;
+    var addToCounterPerTick = 1131;
     var counterStartingOffset = 1;
     var drawsPerTickIncrease = 3;
     var colorArray = new Uint32Array(addToCounterPerTick);
