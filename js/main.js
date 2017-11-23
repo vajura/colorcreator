@@ -35,29 +35,30 @@ function createSpiralArray(x, y) {
 }
 //TODO CHECK IF COLORING AND PUTTING EVERY PIXEL ON SCREEN AND THEN JUST CHANGING COLOR IS FASTER
 function start() {
-    var stageSize = 400;
+    var stageSize = 800;
     var stageSizeX2 = stageSize * stageSize;
     var spiralArray = createSpiralArray(stageSize / 2 - 1, stageSize / 2 - 1);
-    var counter = 0;
     var canv = document.getElementById("container0");
     var ctx = canv.getContext("2d");
     var imageData = ctx.createImageData(stageSize, stageSize);
     var data32 = new Uint32Array(imageData.data.buffer);
+    var counter = 0;
     var interval = 1000 / 60;
     var drawsPerTick = 8;
-    var addToCounterPerTick = 666;
+    var addToCounterPerTick = 5;
     var counterStartingOffset = 1;
     var drawsPerTickIncrease = 3;
     var colorArray = new Uint32Array(addToCounterPerTick);
     colorArray[0] = 0xFFFF0000;
     colorArray[1] = 0xFF00FF00;
     colorArray[2] = 0xFF0000FF;
-    colorArray[3] = 0xFF00FFFF;
-    colorArray[4] = 0xFFFFFF00;
-    colorArray[5] = 0xFFFF00FF;
+    colorArray[3] = 0xFFFFFF00;
+    colorArray[4] = 0xFFFF00FF;
+    colorArray[5] = 0xFF00FFFF;
+    colorArray[6] = 0xFF000000;
     var intervalIndex = setInterval(function () {
         for (var a = 0; a < drawsPerTick && counter < stageSizeX2; a++) {
-            data32[spiralArray[counter].x + spiralArray[counter].y * stageSize] = colorArray[counterStartingOffset % 5]; //A
+            data32[spiralArray[counter].x + spiralArray[counter].y * stageSize] = 0xFFFF0000;
             counter += addToCounterPerTick;
         }
         if (counter >= stageSizeX2) {
@@ -68,7 +69,7 @@ function start() {
             counterStartingOffset++;
             drawsPerTickIncrease = 2;
         }
-        drawsPerTick = 500 + Math.floor(drawsPerTickIncrease * 128 / addToCounterPerTick);
+        drawsPerTick = 512 + Math.floor(drawsPerTickIncrease * 128 / addToCounterPerTick);
         drawsPerTickIncrease += 2;
         ctx.putImageData(imageData, 0, 0);
     }, interval);

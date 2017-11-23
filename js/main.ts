@@ -39,12 +39,11 @@ function createSpiralArray(x: number, y: number) {
 
 //TODO CHECK IF COLORING AND PUTTING EVERY PIXEL ON SCREEN AND THEN JUST CHANGING COLOR IS FASTER
 function start() {
-	let stageSize = 400;
+	let stageSize = 800;
 	let stageSizeX2 = stageSize * stageSize;
 
 	let spiralArray = createSpiralArray(stageSize/2 - 1 , stageSize/2 - 1);
 
-	let counter = 0;
 
 	let canv = <HTMLCanvasElement>document.getElementById("container0");
     let ctx = canv.getContext("2d");
@@ -52,9 +51,10 @@ function start() {
 	const imageData = ctx.createImageData(stageSize, stageSize);
 	const data32 = new Uint32Array(imageData.data.buffer);
 
+	let counter = 0;
 	let interval = 1000/60;
 	let drawsPerTick = 8;
-	let addToCounterPerTick = 666;
+	let addToCounterPerTick = 5;
 	let counterStartingOffset = 1;
 	let drawsPerTickIncrease = 3;
 
@@ -62,13 +62,14 @@ function start() {
 	colorArray[0] = 0xFFFF0000;
 	colorArray[1] = 0xFF00FF00;
 	colorArray[2] = 0xFF0000FF;
-	colorArray[3] = 0xFF00FFFF;
-	colorArray[4] = 0xFFFFFF00;
-	colorArray[5] = 0xFFFF00FF;
+	colorArray[3] = 0xFFFFFF00;
+	colorArray[4] = 0xFFFF00FF;
+	colorArray[5] = 0xFF00FFFF;
+	colorArray[6] = 0xFF000000;
 
 	let intervalIndex = setInterval(function() {
 		for(let a = 0; a < drawsPerTick && counter < stageSizeX2; a++) {
-			data32[spiralArray[counter].x + spiralArray[counter].y * stageSize] = colorArray[counterStartingOffset%5];//A
+			data32[spiralArray[counter].x + spiralArray[counter].y * stageSize] = 0xFFFF0000;
 			counter += addToCounterPerTick;
 		}
 		if(counter >= stageSizeX2) {
@@ -79,7 +80,7 @@ function start() {
 			counterStartingOffset++;
 			drawsPerTickIncrease = 2;
 		}
-		drawsPerTick = 500 + Math.floor(drawsPerTickIncrease * 128 / addToCounterPerTick);
+		drawsPerTick = 512 + Math.floor(drawsPerTickIncrease * 128 / addToCounterPerTick);
 		drawsPerTickIncrease += 2;
 		ctx.putImageData(imageData, 0, 0);
 	}, interval)
