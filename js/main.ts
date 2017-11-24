@@ -19,7 +19,7 @@ axisArray[13] = 1;
 axisArray[14] = 1;
 axisArray[15] = 1;
 
-const stageSize = 800;
+const stageSize = 400;
 const stageSizeX2 = stageSize * stageSize;
 let pixel2DArray: Array<Array<Pixel>> = new Array<Array<Pixel>>();
 let hashedDeadPixels: Array<Pixel> = new Array<Pixel>();
@@ -27,18 +27,18 @@ let hashedDeadPixels: Array<Pixel> = new Array<Pixel>();
 let runningTotal = 0;
 
 class Pixel {
-	public color;
-	constructor(public x: number, public y: number, public weight: number, public drawn: boolean = false) {
-		this.color = 0xFFFF0000;
+	constructor(public x: number, public y: number, public weight: number, public color, public drawn: boolean = false) {
 		runningTotal += weight;
 	}
 
 	public setNeighbour() {
 		for(let a = 0; a < 16; a+=2) {
-			if(!pixel2DArray[this.y + axisArray[a+1]][this.x + axisArray[a]]) {
-				let pixel = new Pixel(this.x + axisArray[a], this.y + axisArray[a+1], this.weight - 1);
+			let tempY = this.y + axisArray[a+1];
+			let tempX = this.x + axisArray[a];
+			if(!pixel2DArray[tempY][tempX]) {
+				let pixel = new Pixel(tempX, tempY, this.weight - 1, this.color);
 				hashedDeadPixels.push(pixel);
-				pixel2DArray[this.y + axisArray[a+1]][this.x + axisArray[a]] = pixel;
+				pixel2DArray[tempY][tempX] = pixel;
 			}
 		}
 	}
@@ -88,16 +88,14 @@ function createSpiralArray(x: number, y: number) {
 	return array;
 }
 
-function activatePixel(x: number, y: number, weight: number, data32) {
-	if (pixel2DArray[y][x]) {
-		pixel2DArray[y][x].drawn = true;
-		runningTotal -= pixel2DArray[y][x].weight;
-	} else {
-		let pixel = new Pixel(x, y , weight, true);
+function activatePixel(x: number, y: number, weight: number, color, data32) {
+	if (!pixel2DArray[y][x]) {
+		let pixel = new Pixel(x, y, weight, color, true);
 		pixel.setNeighbour();
 		pixel2DArray[y][x] = pixel;
+		data32[x + y * stageSize] = pixel2DArray[y][x].color;
+		runningTotal -= weight;
 	}
-	data32[x + y * stageSize] = pixel2DArray[y][x].color;
 }
 
 function getNextPixel(data32) {
@@ -115,7 +113,6 @@ function start() {
 		}
 	}
 	
-
 	let spiralArray = createSpiralArray(stageSize/2 - 1 , stageSize/2 - 1);
 
 	const canv = <HTMLCanvasElement>document.getElementById("container0");
@@ -124,9 +121,9 @@ function start() {
 	const imageData = ctx.createImageData(stageSize, stageSize);
 	const data32 = new Uint32Array(imageData.data.buffer);
 
-	activatePixel(400, 400, 1000, data32);
+	activatePixel(150, 200, 1000, 0xFFFF0000, data32);
+	activatePixel(250, 200, 1000, 0xFF00FF00, data32);
 
-	runningTotal -= 1000;
 
 	let counter = 0;
 	let interval = 1000/60;
@@ -147,6 +144,7 @@ function start() {
 		for(let a = 0; a < drawsPerTick; a++) {
 			getNextPixel(data32);
 		}
+		drawsPerTick++;
 		/*for(let a = 0; a < drawsPerTick && counter < stageSizeX2; a++) {
 			data32[spiralArray[counter].x + spiralArray[counter].y * stageSize] = 0xFFFF0000;
 			counter += addToCounterPerTick;
