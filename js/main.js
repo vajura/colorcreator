@@ -1,9 +1,52 @@
+var axisArray = new Int8Array(16);
+axisArray[0] = -1;
+axisArray[1] = -1;
+axisArray[2] = 0;
+axisArray[3] = -1;
+axisArray[4] = 1;
+axisArray[5] = -1;
+axisArray[6] = -1;
+axisArray[7] = 0;
+axisArray[8] = 1;
+axisArray[9] = 0;
+axisArray[10] = -1;
+axisArray[11] = 1;
+axisArray[12] = 0;
+axisArray[13] = 1;
+axisArray[14] = 1;
+axisArray[15] = 1;
+var stageSize = 800;
+var stageSizeX2 = stageSize * stageSize;
+var pixel2DArray = new Array();
+var hashedDeadPixels = new Array();
+var runningTotal = 0;
 var Pixel = /** @class */ (function () {
-    function Pixel(weight, liveNeighbours, deadNeighbours) {
+    function Pixel(x, y, weight, drawn) {
+        if (drawn === void 0) { drawn = false; }
+        this.x = x;
+        this.y = y;
         this.weight = weight;
-        this.liveNeighbours = liveNeighbours;
-        this.deadNeighbours = deadNeighbours;
+        this.drawn = drawn;
+        this.color = 0xFFFF0000;
+        runningTotal += weight;
     }
+    Pixel.prototype.setNeighbour = function () {
+        for (var a = 0; a < 16; a += 2) {
+            if (!pixel2DArray[this.y + axisArray[a + 1]][this.x + axisArray[a]]) {
+                var pixel = new Pixel(this.x + axisArray[a], this.y + axisArray[a + 1], this.weight - 1);
+                hashedDeadPixels.push(pixel);
+                pixel2DArray[this.y + axisArray[a + 1]][this.x + axisArray[a]] = pixel;
+            }
+        }
+    };
+    Pixel.prototype.makeAlive = function (data32) {
+        this.drawn = true;
+        this.setNeighbour();
+        runningTotal -= pixel2DArray[this.y][this.x].weight;
+        data32[this.x + this.y * stageSize] = this.color;
+        hashedDeadPixels.splice(hashedDeadPixels.indexOf(this), 1);
+        //remove from dead array
+    };
     return Pixel;
 }());
 function createSpiralArray(x, y) {
@@ -41,26 +84,40 @@ function createSpiralArray(x, y) {
     }
     return array;
 }
-function createPixels(x, y, weight, color, live, livePixels) {
-}
-//TODO CHECK IF COLORING AND PUTTING EVERY PIXEL ON SCREEN AND THEN JUST CHANGING COLOR IS FASTER
-function start() {
-    var stageSize = 800;
-    var stageSizeX2 = stageSize * stageSize;
-    var livePixels = new Array();
-    for (var a = 0; a < 200; a++) {
-        livePixels[a] = new Array();
+function activatePixel(x, y, weight, data32) {
+    if (pixel2DArray[y][x]) {
+        pixel2DArray[y][x].drawn = true;
+        runningTotal -= pixel2DArray[y][x].weight;
     }
-    //createPixels(200, 200, 1, 0xFFFF0000, true);
+    else {
+        var pixel = new Pixel(x, y, weight, true);
+        pixel.setNeighbour();
+        pixel2DArray[y][x] = pixel;
+    }
+    data32[x + y * stageSize] = pixel2DArray[y][x].color;
+}
+function getNextPixel(data32) {
+    var randomIndex = Math.floor(Math.random() * runningTotal / 1000);
+    hashedDeadPixels[randomIndex].makeAlive(data32);
+}
+function start() {
+    for (var a = 0; a < stageSize; a++) {
+        pixel2DArray[a] = new Array();
+        for (var b = 0; b < stageSize; b++) {
+            pixel2DArray[a][b] = null;
+        }
+    }
     var spiralArray = createSpiralArray(stageSize / 2 - 1, stageSize / 2 - 1);
     var canv = document.getElementById("container0");
     var ctx = canv.getContext("2d");
     var imageData = ctx.createImageData(stageSize, stageSize);
     var data32 = new Uint32Array(imageData.data.buffer);
+    activatePixel(400, 400, 1000, data32);
+    runningTotal -= 1000;
     var counter = 0;
     var interval = 1000 / 60;
-    var drawsPerTick = 8;
-    var addToCounterPerTick = 1131;
+    var drawsPerTick = 100;
+    var addToCounterPerTick = 1;
     var counterStartingOffset = 1;
     var drawsPerTickIncrease = 3;
     var colorArray = new Uint32Array(addToCounterPerTick);
@@ -71,12 +128,15 @@ function start() {
     colorArray[4] = 0xFFFF00FF;
     colorArray[5] = 0xFF00FFFF;
     var intervalIndex = setInterval(function () {
-        for (var a = 0; a < drawsPerTick && counter < stageSizeX2; a++) {
+        for (var a = 0; a < drawsPerTick; a++) {
+            getNextPixel(data32);
+        }
+        /*for(let a = 0; a < drawsPerTick && counter < stageSizeX2; a++) {
             data32[spiralArray[counter].x + spiralArray[counter].y * stageSize] = 0xFFFF0000;
             counter += addToCounterPerTick;
         }
-        if (counter >= stageSizeX2) {
-            if (counterStartingOffset == addToCounterPerTick) {
+        if(counter >= stageSizeX2) {
+            if(counterStartingOffset == addToCounterPerTick) {
                 clearInterval(intervalIndex);
             }
             counter = counterStartingOffset;
@@ -84,7 +144,7 @@ function start() {
             drawsPerTickIncrease = 2;
         }
         drawsPerTick = 512 + Math.floor(drawsPerTickIncrease * 128 / addToCounterPerTick);
-        drawsPerTickIncrease += 2;
+        drawsPerTickIncrease += 2;*/
         ctx.putImageData(imageData, 0, 0);
     }, interval);
 }

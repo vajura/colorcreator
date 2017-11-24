@@ -1,10 +1,54 @@
 declare var createjs;
 declare var $;
 
+const axisArray = new Int8Array(16);
+axisArray[0] = -1;
+axisArray[1] = -1;
+axisArray[2] = 0;
+axisArray[3] = -1;
+axisArray[4] = 1;
+axisArray[5] = -1;
+axisArray[6] = -1;
+axisArray[7] = 0;
+axisArray[8] = 1;
+axisArray[9] = 0;
+axisArray[10] = -1;
+axisArray[11] = 1;
+axisArray[12] = 0;
+axisArray[13] = 1;
+axisArray[14] = 1;
+axisArray[15] = 1;
+
+const stageSize = 800;
+const stageSizeX2 = stageSize * stageSize;
+let pixel2DArray: Array<Array<Pixel>> = new Array<Array<Pixel>>();
+let hashedDeadPixels: Array<Pixel> = new Array<Pixel>();
+
+let runningTotal = 0;
+
 class Pixel {
 	public color;
-	constructor(public weight: number, public liveNeighbours: Array<Pixel>, public deadNeighbours: Array<Pixel>) {
+	constructor(public x: number, public y: number, public weight: number, public drawn: boolean = false) {
+		this.color = 0xFFFF0000;
+		runningTotal += weight;
+	}
 
+	public setNeighbour() {
+		for(let a = 0; a < 16; a+=2) {
+			if(!pixel2DArray[this.y + axisArray[a+1]][this.x + axisArray[a]]) {
+				let pixel = new Pixel(this.x + axisArray[a], this.y + axisArray[a+1], this.weight - 1);
+				hashedDeadPixels.push(pixel);
+				pixel2DArray[this.y + axisArray[a+1]][this.x + axisArray[a]] = pixel;
+			}
+		}
+	}
+	public makeAlive(data32) {
+		this.drawn = true;
+		this.setNeighbour();
+		runningTotal -= pixel2DArray[this.y][this.x].weight;
+		data32[this.x + this.y * stageSize] = this.color;
+		hashedDeadPixels.splice(hashedDeadPixels.indexOf(this), 1);
+		//remove from dead array
 	}
 }
 
@@ -44,35 +88,50 @@ function createSpiralArray(x: number, y: number) {
 	return array;
 }
 
-function createPixels(x: number, y: number, weight: number, color, live: boolean, livePixels: Array<Array<Pixel>>) {
-	
+function activatePixel(x: number, y: number, weight: number, data32) {
+	if (pixel2DArray[y][x]) {
+		pixel2DArray[y][x].drawn = true;
+		runningTotal -= pixel2DArray[y][x].weight;
+	} else {
+		let pixel = new Pixel(x, y , weight, true);
+		pixel.setNeighbour();
+		pixel2DArray[y][x] = pixel;
+	}
+	data32[x + y * stageSize] = pixel2DArray[y][x].color;
 }
 
-//TODO CHECK IF COLORING AND PUTTING EVERY PIXEL ON SCREEN AND THEN JUST CHANGING COLOR IS FASTER
+function getNextPixel(data32) {
+	var randomIndex = Math.floor(Math.random() * runningTotal / 1000);
+	hashedDeadPixels[randomIndex].makeAlive(data32);
+}
+
+
 function start() {
-	let stageSize = 800;
-	let stageSizeX2 = stageSize * stageSize;
 
-	let livePixels: Array<Array<Pixel>> = new Array<Array<Pixel>>();
-	for (let a = 0; a < 200; a++) {
-		livePixels[a] = new Array<Pixel>();
+	for (let a = 0; a < stageSize; a++) {
+		pixel2DArray[a] = new Array<Pixel>();
+		for(let b = 0; b < stageSize; b++) {
+			pixel2DArray[a][b] = null;
+		}
 	}
-	//createPixels(200, 200, 1, 0xFFFF0000, true);
-
 	
 
 	let spiralArray = createSpiralArray(stageSize/2 - 1 , stageSize/2 - 1);
 
-	let canv = <HTMLCanvasElement>document.getElementById("container0");
-    let ctx = canv.getContext("2d");
+	const canv = <HTMLCanvasElement>document.getElementById("container0");
+    const ctx = canv.getContext("2d");
 
 	const imageData = ctx.createImageData(stageSize, stageSize);
 	const data32 = new Uint32Array(imageData.data.buffer);
 
+	activatePixel(400, 400, 1000, data32);
+
+	runningTotal -= 1000;
+
 	let counter = 0;
 	let interval = 1000/60;
-	let drawsPerTick = 8;
-	let addToCounterPerTick = 1131;
+	let drawsPerTick = 100;
+	let addToCounterPerTick = 1;
 	let counterStartingOffset = 1;
 	let drawsPerTickIncrease = 3;
 
@@ -85,7 +144,10 @@ function start() {
 	colorArray[5] = 0xFF00FFFF;
 
 	let intervalIndex = setInterval(function() {
-		for(let a = 0; a < drawsPerTick && counter < stageSizeX2; a++) {
+		for(let a = 0; a < drawsPerTick; a++) {
+			getNextPixel(data32);
+		}
+		/*for(let a = 0; a < drawsPerTick && counter < stageSizeX2; a++) {
 			data32[spiralArray[counter].x + spiralArray[counter].y * stageSize] = 0xFFFF0000;
 			counter += addToCounterPerTick;
 		}
@@ -98,7 +160,7 @@ function start() {
 			drawsPerTickIncrease = 2;
 		}
 		drawsPerTick = 512 + Math.floor(drawsPerTickIncrease * 128 / addToCounterPerTick);
-		drawsPerTickIncrease += 2;
+		drawsPerTickIncrease += 2;*/
 		ctx.putImageData(imageData, 0, 0);
 	}, interval)
 }
