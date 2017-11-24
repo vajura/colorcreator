@@ -15,7 +15,7 @@ axisArray[12] = 0;
 axisArray[13] = 1;
 axisArray[14] = 1;
 axisArray[15] = 1;
-var stageSize = 400;
+var stageSize = 800;
 var stageSizeX2 = stageSize * stageSize;
 var pixel2DArray = new Array();
 var hashedDeadPixels = new Array();
@@ -34,7 +34,7 @@ var Pixel = /** @class */ (function () {
         for (var a = 0; a < 16; a += 2) {
             var tempY = this.y + axisArray[a + 1];
             var tempX = this.x + axisArray[a];
-            if (!pixel2DArray[tempY][tempX]) {
+            if (tempX >= 0 && tempX < stageSize && tempY >= 0 && tempY < stageSize && !pixel2DArray[tempY][tempX]) {
                 var pixel = new Pixel(tempX, tempY, this.weight - 1, this.color);
                 hashedDeadPixels.push(pixel);
                 pixel2DArray[tempY][tempX] = pixel;
@@ -44,10 +44,9 @@ var Pixel = /** @class */ (function () {
     Pixel.prototype.makeAlive = function (data32) {
         this.drawn = true;
         this.setNeighbour();
-        runningTotal -= pixel2DArray[this.y][this.x].weight;
-        data32[this.x + this.y * stageSize] = this.color;
         hashedDeadPixels.splice(hashedDeadPixels.indexOf(this), 1);
-        //remove from dead array
+        data32[this.x + this.y * stageSize] = this.color;
+        runningTotal -= pixel2DArray[this.y][this.x].weight;
     };
     return Pixel;
 }());
@@ -97,7 +96,12 @@ function activatePixel(x, y, weight, color, data32) {
 }
 function getNextPixel(data32) {
     var randomIndex = Math.floor(Math.random() * runningTotal / 1000);
-    hashedDeadPixels[randomIndex].makeAlive(data32);
+    try {
+        hashedDeadPixels[randomIndex].makeAlive(data32);
+    }
+    catch (err) {
+        console.log(hashedDeadPixels.length + " " + randomIndex);
+    }
 }
 function start() {
     for (var a = 0; a < stageSize; a++) {
@@ -106,13 +110,16 @@ function start() {
             pixel2DArray[a][b] = null;
         }
     }
-    var spiralArray = createSpiralArray(stageSize / 2 - 1, stageSize / 2 - 1);
+    //let spiralArray = createSpiralArray(stageSize/2 - 1 , stageSize/2 - 1);
     var canv = document.getElementById("container0");
     var ctx = canv.getContext("2d");
     var imageData = ctx.createImageData(stageSize, stageSize);
     var data32 = new Uint32Array(imageData.data.buffer);
-    activatePixel(150, 200, 1000, 0xFFFF0000, data32);
-    activatePixel(250, 200, 1000, 0xFF00FF00, data32);
+    activatePixel(200, 200, 1000, 0xFFFF0000, data32);
+    activatePixel(600, 200, 1000, 0xFF00FF00, data32);
+    activatePixel(200, 600, 1000, 0xFF0000FF, data32);
+    activatePixel(600, 600, 1000, 0xFFFFFF00, data32);
+    activatePixel(400, 400, 1000, 0xFF00FFFF, data32);
     var counter = 0;
     var interval = 1000 / 60;
     var drawsPerTick = 100;
@@ -130,7 +137,6 @@ function start() {
         for (var a = 0; a < drawsPerTick; a++) {
             getNextPixel(data32);
         }
-        drawsPerTick++;
         /*for(let a = 0; a < drawsPerTick && counter < stageSizeX2; a++) {
             data32[spiralArray[counter].x + spiralArray[counter].y * stageSize] = 0xFFFF0000;
             counter += addToCounterPerTick;
