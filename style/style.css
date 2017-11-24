@@ -8,6 +8,7 @@
 html {
     width: 100vw;
     height: 100vh;
+    background: #EEEEEE;
 }
 
 body {
@@ -37,6 +38,7 @@ body {
 }
 .label {
     font-size: 20px;
+    color: black;
 }
 .number-input {
     margin: 5px 0 15px 0;

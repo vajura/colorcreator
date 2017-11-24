@@ -44,7 +44,7 @@ function startAdvancedAnimation(advancedOffsetNumber, speed) {
                 var tempY = this.y + axisArray[a + 1];
                 var tempX = this.x + axisArray[a];
                 if (tempX >= 0 && tempX < stageSize && tempY >= 0 && tempY < stageSize && !pixel2DArray[tempY][tempX]) {
-                    var pixel = new Pixel(tempX, tempY, this.color);
+                    var pixel = new Pixel(tempX, tempY, this.color - 0x0000101);
                     hashedDeadPixels.push(pixel);
                     pixel2DArray[tempY][tempX] = pixel;
                 }
@@ -70,11 +70,17 @@ function startAdvancedAnimation(advancedOffsetNumber, speed) {
     function getNextPixel(data32) {
         //var randomIndex = Math.floor(Math.random() * runningTotal / 10);
         //let randomIndex = Math.floor(Math.random() * hashedDeadPixels.length);
-        var randomIndex = 0;
+        var randomIndex = hashedDeadPixels.length - 8;
         if (hashedDeadPixels.length > advancedOffsetNumber) {
             randomIndex = hashedDeadPixels.length - advancedOffsetNumber;
         }
-        hashedDeadPixels[randomIndex].makeAlive(randomIndex);
+        var pixel = hashedDeadPixels[randomIndex];
+        if (pixel) {
+            pixel.makeAlive(randomIndex);
+        }
+        else {
+            clearInterval(intervalIndex);
+        }
     }
     var pixel2DArray = new Array();
     var hashedDeadPixels = new Array();
@@ -86,11 +92,11 @@ function startAdvancedAnimation(advancedOffsetNumber, speed) {
             pixel2DArray[a][b] = null;
         }
     }
-    /*activatePixel(200, 200, 0xFFFF0000);
+    //activatePixel(200, 200, 0xFFFF0000);
     activatePixel(600, 200, 0xFF00FF00);
-    activatePixel(200, 600, 0xFF0000FF);
-    activatePixel(600, 600, 0xFFFFFF00);*/
-    activatePixel(400, 400, 0xFFFF0000);
+    //activatePixel(200, 600, 0xFF0000FF);
+    //activatePixel(600, 600, 0xFFFFFF00);
+    //activatePixel(400, 400, 0xFFFF0000);
     var interval = 1000 / 60;
     var drawsPerTick = parseInt(speed);
     var start = 0, end = 0, time = 0;
@@ -107,7 +113,8 @@ function startAdvancedAnimation(advancedOffsetNumber, speed) {
         ctx.putImageData(imageData, 0, 0);
     }, interval);
 }
-function startSpiralAnimation(spiralOffsetNumber, speed) {
+function startSpiralAnimation(spiralOffsetNumber, speed, color, repeat) {
+    if (repeat === void 0) { repeat = false; }
     spiralOffsetNumber = parseInt(spiralOffsetNumber);
     function createSpiralArray(x, y) {
         var array = [];
@@ -144,8 +151,10 @@ function startSpiralAnimation(spiralOffsetNumber, speed) {
         }
         return array;
     }
-    imageData = ctx.createImageData(stageSize, stageSize);
-    data32 = new Uint32Array(imageData.data.buffer);
+    if (!repeat) {
+        imageData = ctx.createImageData(stageSize, stageSize);
+        data32 = new Uint32Array(imageData.data.buffer);
+    }
     var spiralArray = createSpiralArray(stageSize / 2 - 1, stageSize / 2 - 1);
     var counter = 0;
     var interval = 1000 / 60;
@@ -157,13 +166,17 @@ function startSpiralAnimation(spiralOffsetNumber, speed) {
     intervalIndex = setInterval(function () {
         start = window.performance.now();
         for (var a = 0; a < drawsPerTick && counter < stageSizeX2; a++) {
-            data32[spiralArray[counter].x + spiralArray[counter].y * stageSize] = 0xFFFF0000;
+            data32[spiralArray[counter].x + spiralArray[counter].y * stageSize] = color;
             counter += spiralOffsetNumber;
             if (counter >= stageSizeX2) {
                 if (counterStartingOffset == spiralOffsetNumber) {
-                    clearInterval(intervalIndex);
+                    //clearInterval(intervalIndex);
+                    counter = 0;
+                    counterStartingOffset = 1;
+                    drawsPerTickIncrease = 3;
+                    spiralOffsetNumber += 1;
                     $("#spiral-offset-number").val(spiralOffsetNumber + 1);
-                    startSpiralAnimation(spiralOffsetNumber + 1, speed);
+                    color = color - 0x0005000;
                     break;
                 }
                 counter = counterStartingOffset;
@@ -203,13 +216,13 @@ var AnimationTypes = /** @class */ (function () {
         $("#" + label + "-speed-label").text("Speed " + $("#" + label + "-speed").val());
         $("#" + label + "-start-button").on("click touch", function () {
             clearInterval(intervalIndex);
-            mainFunc($("#" + label + "-offset-number").val(), $("#" + label + "-speed").val());
+            mainFunc($("#" + label + "-offset-number").val(), $("#" + label + "-speed").val(), 0xFFFF0000);
         });
     }
     return AnimationTypes;
 }());
 function start() {
     var animationTypes = new Array();
-    animationTypes.push(new AnimationTypes("advanced", 111, startAdvancedAnimation));
+    animationTypes.push(new AnimationTypes("advanced", 7, startAdvancedAnimation));
     animationTypes.push(new AnimationTypes("spiral", 13, startSpiralAnimation, { sliderSpeed: { min: 1, max: 50000 } }));
 }
