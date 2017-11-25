@@ -42,7 +42,7 @@ let intervalIndex;
 function startAdvancedAnimation(advancedOffsetNumber, speed) {
 	advancedOffsetNumber = parseInt(advancedOffsetNumber);
 	class Pixel {
-		constructor(public x: number, public y: number, public color, public drawn: boolean = false) {
+		constructor(public x: number, public y: number, public color) {
 		}
 
 		public setNeighbour() {
@@ -50,7 +50,7 @@ function startAdvancedAnimation(advancedOffsetNumber, speed) {
 				let tempY = this.y + axisArray[a+1];
 				let tempX = this.x + axisArray[a];
 				if(tempX >= 0 && tempX < stageSize && tempY >= 0 && tempY < stageSize && !pixel2DArray[tempY][tempX] ) {
-					let pixel = new Pixel(tempX, tempY, this.color - 0x0000101);
+					let pixel = new Pixel(tempX, tempY, this.color - 0x00100000);
 					hashedDeadPixels.push(pixel);
 					pixel2DArray[tempY][tempX] = pixel;
 				}
@@ -66,10 +66,12 @@ function startAdvancedAnimation(advancedOffsetNumber, speed) {
 	}
 
 
-	function activatePixel(x: number, y: number, color) {
+	function activatePixel(x: number, y: number, color, addToArray: boolean) {
 		if (!pixel2DArray[y][x]) {
-			let pixel = new Pixel(x, y, color, true);
-			pixel.setNeighbour();
+			let pixel = new Pixel(x, y, color);
+			if(addToArray) {
+				pixel.setNeighbour();
+			}
 			pixel2DArray[y][x] = pixel;
 			data32[x + y * stageSize] = pixel2DArray[y][x].color;
 		}
@@ -101,12 +103,19 @@ function startAdvancedAnimation(advancedOffsetNumber, speed) {
 			pixel2DArray[a][b] = null;
 		}
 	}
+	for(let a = 100; a < 700; a++) {
+		activatePixel(a, 500, 0xFF000000, false);
+	}
 
-	//activatePixel(200, 200, 0xFFFF0000);
-	activatePixel(600, 200, 0xFF00FF00);
-	//activatePixel(200, 600, 0xFF0000FF);
-	//activatePixel(600, 600, 0xFFFFFF00);
-	//activatePixel(400, 400, 0xFFFF0000);
+	for(let a = 500; a < 797; a++) {
+		activatePixel(700, a, 0xFF000000, false);
+	}
+
+	activatePixel(200, 200, 0xFFFF0000, true);
+	//activatePixel(600, 200, 0xFF00FF00, true);
+	//activatePixel(200, 600, 0xFF0000FF, true);
+	//activatePixel(600, 600, 0xFFFFFF00, true);
+	//activatePixel(400, 400, 0xFFFF00FF, true);
 
 	let interval = 1000/60;
 	let drawsPerTick = parseInt(speed);

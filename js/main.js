@@ -32,19 +32,17 @@ var intervalIndex;
 function startAdvancedAnimation(advancedOffsetNumber, speed) {
     advancedOffsetNumber = parseInt(advancedOffsetNumber);
     var Pixel = /** @class */ (function () {
-        function Pixel(x, y, color, drawn) {
-            if (drawn === void 0) { drawn = false; }
+        function Pixel(x, y, color) {
             this.x = x;
             this.y = y;
             this.color = color;
-            this.drawn = drawn;
         }
         Pixel.prototype.setNeighbour = function () {
             for (var a = 0; a < 16; a += 2) {
                 var tempY = this.y + axisArray[a + 1];
                 var tempX = this.x + axisArray[a];
                 if (tempX >= 0 && tempX < stageSize && tempY >= 0 && tempY < stageSize && !pixel2DArray[tempY][tempX]) {
-                    var pixel = new Pixel(tempX, tempY, this.color - 0x0000101);
+                    var pixel = new Pixel(tempX, tempY, this.color - 0x00100000);
                     hashedDeadPixels.push(pixel);
                     pixel2DArray[tempY][tempX] = pixel;
                 }
@@ -59,10 +57,12 @@ function startAdvancedAnimation(advancedOffsetNumber, speed) {
         };
         return Pixel;
     }());
-    function activatePixel(x, y, color) {
+    function activatePixel(x, y, color, addToArray) {
         if (!pixel2DArray[y][x]) {
-            var pixel = new Pixel(x, y, color, true);
-            pixel.setNeighbour();
+            var pixel = new Pixel(x, y, color);
+            if (addToArray) {
+                pixel.setNeighbour();
+            }
             pixel2DArray[y][x] = pixel;
             data32[x + y * stageSize] = pixel2DArray[y][x].color;
         }
@@ -92,11 +92,17 @@ function startAdvancedAnimation(advancedOffsetNumber, speed) {
             pixel2DArray[a][b] = null;
         }
     }
-    //activatePixel(200, 200, 0xFFFF0000);
-    activatePixel(600, 200, 0xFF00FF00);
-    //activatePixel(200, 600, 0xFF0000FF);
-    //activatePixel(600, 600, 0xFFFFFF00);
-    //activatePixel(400, 400, 0xFFFF0000);
+    for (var a = 100; a < 700; a++) {
+        activatePixel(a, 500, 0xFF000000, false);
+    }
+    for (var a = 500; a < 797; a++) {
+        activatePixel(700, a, 0xFF000000, false);
+    }
+    activatePixel(200, 200, 0xFFFF0000, true);
+    //activatePixel(600, 200, 0xFF00FF00, true);
+    //activatePixel(200, 600, 0xFF0000FF, true);
+    //activatePixel(600, 600, 0xFFFFFF00, true);
+    //activatePixel(400, 400, 0xFFFF00FF, true);
     var interval = 1000 / 60;
     var drawsPerTick = parseInt(speed);
     var start = 0, end = 0, time = 0;
