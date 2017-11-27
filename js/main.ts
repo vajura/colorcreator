@@ -35,10 +35,49 @@ let intervalIndex;
 
 function startAdvancedAnimation(advancedOffsetNumber, speed) {
 	advancedOffsetNumber = parseInt(advancedOffsetNumber);
+
+	class LinkedPixels {
+		public head = null;
+
+		public push(val) {
+			var head = this.head,
+			current = head,
+			previous = head;
+			if(!head) {
+				this.head = {value: val, previous:null, next:null };
+			} else {
+				while (current && current.next){
+					previous = current;
+					current = current.next;
+				}     
+				current.next = {value: val, previous:current, next:null}
+			}  
+		}
+
+		public remove(val) {
+			var current = this.head;
+			//case-1
+			if (current.value == val){
+				this.head = current.next;     
+			} else {
+				var previous = current;
+
+				while(current.next) {
+					if(current.value == val ){
+						previous.next = current.next;          
+						break;
+					}
+					previous = current;
+					current = current.next;
+				}
+				if(current.value == val) {
+					previous.next == null;
+				}
+			}
+		}
+	}
+
 	class Pixel {
-		public nextPixel: Pixel;
-		public prevPixel: Pixel;
-		public static len = 0;
 		constructor(public x: number, public y: number, public color) {
 		}
 
@@ -75,12 +114,12 @@ function startAdvancedAnimation(advancedOffsetNumber, speed) {
 	function getNextPixel(data32) {
 		//let randomIndex = 0;
 
-		let randomIndex = Math.floor(Math.random() * hashedDeadPixels.length);
+		//let randomIndex = Math.floor(Math.random() * hashedDeadPixels.length);
 
-		/*let randomIndex = hashedDeadPixels.length - 1;
+		let randomIndex = hashedDeadPixels.length - 1;
 		if (hashedDeadPixels.length > advancedOffsetNumber){
 			randomIndex = hashedDeadPixels.length - advancedOffsetNumber;
-		}*/
+		}
 
 		let pixel = hashedDeadPixels[randomIndex];
 
@@ -115,7 +154,7 @@ function startAdvancedAnimation(advancedOffsetNumber, speed) {
 		}
 		cc++;
 	}*/
-	/*for(let a = 100; a < 700; a++) {
+	for(let a = 100; a < 700; a++) {
 		activatePixel(a, 500, 0xFF000000, false);
 	}
 	for(let a = 500; a < 797; a++) {
@@ -126,16 +165,16 @@ function startAdvancedAnimation(advancedOffsetNumber, speed) {
 	}
 	for(let a = 502; a < 800; a++) {
 		activatePixel(400, a, 0xFF000000, false);
-	}*/
+	}
 
 
 	//activatePixel(400, 400, 0xFFFF0000, true);
 
 	activatePixel(200, 200, 0xFFFF0000, true);
-	activatePixel(600, 200, 0xFF00FF00, true);
+	/*activatePixel(600, 200, 0xFF00FF00, true);
 	activatePixel(200, 600, 0xFF0000FF, true);
 	activatePixel(600, 600, 0xFFFFFF00, true);
-	activatePixel(400, 400, 0xFF00FFFF, true);
+	activatePixel(400, 400, 0xFF00FFFF, true);*/
 
 	let interval = 1000/30;
 	let drawsPerTick = parseInt(speed)*2;
