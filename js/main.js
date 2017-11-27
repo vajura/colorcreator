@@ -28,40 +28,114 @@ function startAdvancedAnimation(advancedOffsetNumber, speed) {
     var LinkedPixels = /** @class */ (function () {
         function LinkedPixels() {
             this.head = null;
+            this.tail = null;
+            this.length = 0;
         }
-        LinkedPixels.prototype.push = function (val) {
+        LinkedPixels.prototype.push = function (value) {
             var head = this.head, current = head, previous = head;
-            if (!head) {
-                this.head = { value: val, previous: null, next: null };
+            if (head) {
+                var next = { value: value, previous: this.tail, next: null };
+                this.tail.next = next;
+                this.tail = next;
             }
             else {
-                while (current && current.next) {
-                    previous = current;
-                    current = current.next;
-                }
-                current.next = { value: val, previous: current, next: null };
+                this.head = { value: value, previous: null, next: null };
+                this.tail = this.head;
             }
+            this.length++;
         };
-        LinkedPixels.prototype.remove = function (val) {
+        LinkedPixels.prototype.getValueByIndex = function (index) {
             var current = this.head;
-            //case-1
-            if (current.value == val) {
+            if (index >= this.length) {
+                return null;
+            }
+            while (index > 0) {
+                current = current.next;
+                index--;
+            }
+            return current.value;
+        };
+        LinkedPixels.prototype.getValueByIndexFromBack = function (index) {
+            var current = this.tail;
+            if (index >= this.length) {
+                return null;
+            }
+            while (index > 0) {
+                current = current.previous;
+                index--;
+            }
+            return current.value;
+        };
+        LinkedPixels.prototype.getNodeByIndex = function (index) {
+            var current = this.head;
+            if (index >= this.length) {
+                return null;
+            }
+            while (index > 0) {
+                current = current.next;
+                index--;
+            }
+            return current;
+        };
+        LinkedPixels.prototype.deleteNodeByNode = function (value) {
+            var current = this.head, previous;
+            if (current.value == value) {
                 this.head = current.next;
+                if (this.head) {
+                    this.head.previous = null;
+                }
+                this.length--;
+                return this.head;
+            }
+            while (current.next) {
+                if (current.value == value) {
+                    previous.next = current.next;
+                    current.next.previous = previous;
+                    this.length--;
+                    return this.head;
+                }
+                previous = current;
+                current = current.next;
+            }
+            if (current.value == value) {
+                previous.next = null;
+                this.length--;
+            }
+            return this.head;
+        };
+        LinkedPixels.prototype.deleteNodeByIndex = function (index) {
+            var current = this.head;
+            if (index >= this.length) {
+                return current;
+            }
+            if (index == 0) {
+                this.head = this.head.next;
+                if (this.head) {
+                    this.head.previous = null;
+                }
+                else {
+                    this.tail = null;
+                }
+                this.length--;
+                if (this.length == 1) {
+                    this.tail = this.head;
+                }
+                return this.head;
+            }
+            while (index > 0) {
+                current = current.next;
+                index--;
+            }
+            if (current.next) {
+                current.previous.next = current.next;
+                current.next.previous = current.previous;
             }
             else {
-                var previous = current;
-                while (current.next) {
-                    if (current.value == val) {
-                        previous.next = current.next;
-                        break;
-                    }
-                    previous = current;
-                    current = current.next;
-                }
-                if (current.value == val) {
-                    previous.next == null;
-                }
+                this.tail = current.previous;
+                this.tail.next = null;
             }
+            this.length--;
+            return this.head;
         };
         return LinkedPixels;
     }());
@@ -77,14 +151,14 @@ function startAdvancedAnimation(advancedOffsetNumber, speed) {
                 var tempX = this.x + axisArray[a];
                 if (tempX >= 0 && tempX < stageSize && tempY >= 0 && tempY < stageSize && !pixel2DArray[tempY][tempX]) {
                     var pixel = new Pixel(tempX, tempY, colorArray[this.color]);
-                    hashedDeadPixels.push(pixel);
+                    linkedPixels.push(pixel);
                     pixel2DArray[tempY][tempX] = pixel;
                 }
             }
         };
         Pixel.prototype.makeAlive = function (index) {
             this.setNeighbour();
-            hashedDeadPixels.splice(index, 1);
+            linkedPixels.deleteNodeByIndex(index);
             data32[this.x + this.y * stageSize] = this.color;
         };
         return Pixel;
@@ -100,23 +174,24 @@ function startAdvancedAnimation(advancedOffsetNumber, speed) {
         }
     }
     function getNextPixel(data32) {
-        //let randomIndex = 0;
-        //let randomIndex = Math.floor(Math.random() * hashedDeadPixels.length);
-        var randomIndex = hashedDeadPixels.length - 1;
-        if (hashedDeadPixels.length > advancedOffsetNumber) {
-            randomIndex = hashedDeadPixels.length - advancedOffsetNumber;
+        //let randomIndex = 1;
+        //let randomIndex = Math.floor(Math.random() * linkedPixels.length);
+        var randomIndex = 0;
+        if (linkedPixels.length > advancedOffsetNumber) {
+            randomIndex = advancedOffsetNumber;
         }
-        var pixel = hashedDeadPixels[randomIndex];
+        var pixel = linkedPixels.getValueByIndexFromBack(randomIndex);
         if (pixel) {
             pixel.makeAlive(randomIndex);
         }
         else {
+            console.log("A");
             clearInterval(intervalIndex);
         }
     }
     var pixel2DArray = new Array();
     var hashedDeadPixels = new Array();
-    var headDeadPixel;
+    var linkedPixels = new LinkedPixels();
     imageData = ctx.createImageData(stageSize, stageSize);
     data32 = new Uint32Array(imageData.data.buffer);
     for (var a = 0; a < stageSize; a++) {
@@ -135,21 +210,21 @@ function startAdvancedAnimation(advancedOffsetNumber, speed) {
         }
         cc++;
     }*/
-    for (var a = 100; a < 700; a++) {
+    /*for (let a = 100; a < 700; a++) {
         activatePixel(a, 500, 0xFF000000, false);
     }
-    for (var a = 500; a < 797; a++) {
+    for (let a = 500; a < 797; a++) {
         activatePixel(700, a, 0xFF000000, false);
     }
-    for (var a = 500; a < 800; a++) {
+    for (let a = 500; a < 800; a++) {
         activatePixel(300, a, 0xFF000000, false);
     }
-    for (var a = 502; a < 800; a++) {
+    for (let a = 502; a < 800; a++) {
         activatePixel(400, a, 0xFF000000, false);
-    }
-    //activatePixel(400, 400, 0xFFFF0000, true);
-    activatePixel(200, 200, 0xFFFF0000, true);
-    /*activatePixel(600, 200, 0xFF00FF00, true);
+    }*/
+    activatePixel(400, 400, 0xFFFF0000, true);
+    /*activatePixel(200, 200, 0xFFFF0000, true);
+    activatePixel(600, 200, 0xFF00FF00, true);
     activatePixel(200, 600, 0xFF0000FF, true);
     activatePixel(600, 600, 0xFFFFFF00, true);
     activatePixel(400, 400, 0xFF00FFFF, true);*/
@@ -164,7 +239,7 @@ function startAdvancedAnimation(advancedOffsetNumber, speed) {
         end = window.performance.now();
         time = end - start;
         if (time > 4) {
-            console.log("Calc: " + time.toFixed(4));
+            //console.log("Calc: " + time.toFixed(4));
         }
         ctx.putImageData(imageData, 0, 0);
     }, interval);
