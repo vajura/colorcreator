@@ -47,6 +47,7 @@ function startAdvancedAnimation(advancedOffsetNumber, speed) {
             hashedDeadPixels.splice(index, 1);
             data32[this.x + this.y * stageSize] = this.color;
         };
+        Pixel.len1 = 0;
         return Pixel;
     }());
     function activatePixel(x, y, color, addToArray) {
@@ -60,12 +61,12 @@ function startAdvancedAnimation(advancedOffsetNumber, speed) {
         }
     }
     function getNextPixel(data32) {
-        //let randomIndex = 3;
-        //let randomIndex = Math.floor(Math.random() * hashedDeadPixels.length);
-        var randomIndex = hashedDeadPixels.length - 1;
-        if (hashedDeadPixels.length > advancedOffsetNumber) {
+        //let randomIndex = 0;
+        var randomIndex = Math.floor(Math.random() * hashedDeadPixels.length);
+        /*let randomIndex = hashedDeadPixels.length - 1;
+        if (hashedDeadPixels.length > advancedOffsetNumber){
             randomIndex = hashedDeadPixels.length - advancedOffsetNumber;
-        }
+        }*/
         var pixel = hashedDeadPixels[randomIndex];
         if (pixel) {
             pixel.makeAlive(randomIndex);
@@ -76,8 +77,10 @@ function startAdvancedAnimation(advancedOffsetNumber, speed) {
     }
     var pixel2DArray = new Array();
     var hashedDeadPixels = new Array();
+    var headDeadPixel;
     imageData = ctx.createImageData(stageSize, stageSize);
     data32 = new Uint32Array(imageData.data.buffer);
+    console.log(Pixel.len1);
     for (var a = 0; a < stageSize; a++) {
         pixel2DArray[a] = new Array();
         for (var b = 0; b < stageSize; b++) {
@@ -107,11 +110,11 @@ function startAdvancedAnimation(advancedOffsetNumber, speed) {
         activatePixel(400, a, 0xFF000000, false);
     }*/
     //activatePixel(400, 400, 0xFFFF0000, true);
-    activatePixel(400, 400, 0xFFFF0000, true);
-    /*activatePixel(600, 200, 0xFF00FF00, true);
+    activatePixel(200, 200, 0xFFFF0000, true);
+    activatePixel(600, 200, 0xFF00FF00, true);
     activatePixel(200, 600, 0xFF0000FF, true);
     activatePixel(600, 600, 0xFFFFFF00, true);
-    activatePixel(400, 400, 0xFF00FFFF, true);*/
+    activatePixel(400, 400, 0xFF00FFFF, true);
     var interval = 1000 / 30;
     var drawsPerTick = parseInt(speed) * 2;
     var start = 0, end = 0, time = 0;

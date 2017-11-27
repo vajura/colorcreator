@@ -36,6 +36,9 @@ let intervalIndex;
 function startAdvancedAnimation(advancedOffsetNumber, speed) {
 	advancedOffsetNumber = parseInt(advancedOffsetNumber);
 	class Pixel {
+		public nextPixel: Pixel;
+		public prevPixel: Pixel;
+		public static len = 0;
 		constructor(public x: number, public y: number, public color) {
 		}
 
@@ -70,14 +73,14 @@ function startAdvancedAnimation(advancedOffsetNumber, speed) {
 	}
 
 	function getNextPixel(data32) {
-		//let randomIndex = 3;
+		//let randomIndex = 0;
 
-		//let randomIndex = Math.floor(Math.random() * hashedDeadPixels.length);
+		let randomIndex = Math.floor(Math.random() * hashedDeadPixels.length);
 
-		let randomIndex = hashedDeadPixels.length - 1;
+		/*let randomIndex = hashedDeadPixels.length - 1;
 		if (hashedDeadPixels.length > advancedOffsetNumber){
 			randomIndex = hashedDeadPixels.length - advancedOffsetNumber;
-		}
+		}*/
 
 		let pixel = hashedDeadPixels[randomIndex];
 
@@ -87,8 +90,11 @@ function startAdvancedAnimation(advancedOffsetNumber, speed) {
 			clearInterval(intervalIndex);
 		}
 	}
+
 	let pixel2DArray: Array<Array<Pixel>> = new Array<Array<Pixel>>();
 	let hashedDeadPixels: Array<Pixel> = new Array<Pixel>();
+
+	let headDeadPixel: Pixel;
 
 	imageData = ctx.createImageData(stageSize, stageSize);
 	data32 = new Uint32Array(imageData.data.buffer);
@@ -125,11 +131,11 @@ function startAdvancedAnimation(advancedOffsetNumber, speed) {
 
 	//activatePixel(400, 400, 0xFFFF0000, true);
 
-	activatePixel(400, 400, 0xFFFF0000, true);
-	/*activatePixel(600, 200, 0xFF00FF00, true);
+	activatePixel(200, 200, 0xFFFF0000, true);
+	activatePixel(600, 200, 0xFF00FF00, true);
 	activatePixel(200, 600, 0xFF0000FF, true);
 	activatePixel(600, 600, 0xFFFFFF00, true);
-	activatePixel(400, 400, 0xFF00FFFF, true);*/
+	activatePixel(400, 400, 0xFF00FFFF, true);
 
 	let interval = 1000/30;
 	let drawsPerTick = parseInt(speed)*2;
