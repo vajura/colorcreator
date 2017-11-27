@@ -99,7 +99,7 @@ function startAdvancedAnimation(advancedOffsetNumber, speed) {
 			pixel2DArray[a][b] = null;
 		}
 	}
-	let cc = 0;
+	/*let cc = 0;
 	for(let a = 0; a < 9; a++) {
 		for(let b = 0; b < 799; b++) {
 			if(cc%2==0)
@@ -108,7 +108,7 @@ function startAdvancedAnimation(advancedOffsetNumber, speed) {
 				activatePixel(b+1, a*80+30, 0x00000000, false);
 		}
 		cc++;
-	}
+	}*/
 	/*for(let a = 100; a < 700; a++) {
 		activatePixel(a, 500, 0xFF000000, false);
 	}
@@ -131,8 +131,8 @@ function startAdvancedAnimation(advancedOffsetNumber, speed) {
 	activatePixel(600, 600, 0xFFFFFF00, true);
 	activatePixel(400, 400, 0xFF00FFFF, true);*/
 
-	let interval = 1000/60;
-	let drawsPerTick = parseInt(speed);
+	let interval = 1000/30;
+	let drawsPerTick = parseInt(speed)*2;
 
 	let start = 0, end = 0, time = 0;
 	intervalIndex = setInterval(function() {
@@ -207,7 +207,6 @@ function startSpiralAnimation(spiralOffsetNumber, speed, color, repeat = false) 
 		start = window.performance.now();
 		for(let a = 0; a < drawsPerTick && counter < stageSizeX2; a++) {
 			data32[spiralArray[counter].x + spiralArray[counter].y * stageSize] = color;
-			color = colorArray[color];
 			counter += spiralOffsetNumber;
 			if(counter >= stageSizeX2) {
 				if(counterStartingOffset == spiralOffsetNumber) {
@@ -224,6 +223,14 @@ function startSpiralAnimation(spiralOffsetNumber, speed, color, repeat = false) 
 				drawsPerTickIncrease = 2;
 				drawsPerTick = parseInt(speed) + Math.floor(drawsPerTickIncrease * parseInt(speed) / spiralOffsetNumber);
 				drawsPerTickIncrease += 2;
+				color = colorArray[color];
+				color = colorArray[color];
+				color = colorArray[color];
+				color = colorArray[color];
+				color = colorArray[color];
+				color = colorArray[color];
+				color = colorArray[color];
+				color = colorArray[color];
 			}
 		}
 		end = window.performance.now();

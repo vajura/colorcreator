@@ -84,16 +84,16 @@ function startAdvancedAnimation(advancedOffsetNumber, speed) {
             pixel2DArray[a][b] = null;
         }
     }
-    var cc = 0;
-    for (var a = 0; a < 9; a++) {
-        for (var b = 0; b < 799; b++) {
-            if (cc % 2 == 0)
-                activatePixel(b, a * 80 + 30, 0x00000000, false);
+    /*let cc = 0;
+    for(let a = 0; a < 9; a++) {
+        for(let b = 0; b < 799; b++) {
+            if(cc%2==0)
+                activatePixel(b, a*80+30, 0x00000000, false);
             else
-                activatePixel(b + 1, a * 80 + 30, 0x00000000, false);
+                activatePixel(b+1, a*80+30, 0x00000000, false);
         }
         cc++;
-    }
+    }*/
     /*for(let a = 100; a < 700; a++) {
         activatePixel(a, 500, 0xFF000000, false);
     }
@@ -112,8 +112,8 @@ function startAdvancedAnimation(advancedOffsetNumber, speed) {
     activatePixel(200, 600, 0xFF0000FF, true);
     activatePixel(600, 600, 0xFFFFFF00, true);
     activatePixel(400, 400, 0xFF00FFFF, true);*/
-    var interval = 1000 / 60;
-    var drawsPerTick = parseInt(speed);
+    var interval = 1000 / 30;
+    var drawsPerTick = parseInt(speed) * 2;
     var start = 0, end = 0, time = 0;
     intervalIndex = setInterval(function () {
         start = window.performance.now();
@@ -182,7 +182,6 @@ function startSpiralAnimation(spiralOffsetNumber, speed, color, repeat) {
         start = window.performance.now();
         for (var a = 0; a < drawsPerTick && counter < stageSizeX2; a++) {
             data32[spiralArray[counter].x + spiralArray[counter].y * stageSize] = color;
-            color = colorArray[color];
             counter += spiralOffsetNumber;
             if (counter >= stageSizeX2) {
                 if (counterStartingOffset == spiralOffsetNumber) {
@@ -199,6 +198,14 @@ function startSpiralAnimation(spiralOffsetNumber, speed, color, repeat) {
                 drawsPerTickIncrease = 2;
                 drawsPerTick = parseInt(speed) + Math.floor(drawsPerTickIncrease * parseInt(speed) / spiralOffsetNumber);
                 drawsPerTickIncrease += 2;
+                color = colorArray[color];
+                color = colorArray[color];
+                color = colorArray[color];
+                color = colorArray[color];
+                color = colorArray[color];
+                color = colorArray[color];
+                color = colorArray[color];
+                color = colorArray[color];
             }
         }
         end = window.performance.now();
