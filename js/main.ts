@@ -62,7 +62,6 @@ function startAdvancedAnimation(advancedOffsetNumber, speed) {
 				this.tail = this.head;
 			}
 			this.length++;
-			console.log(this.length);
 		}
 		public getValueByIndex(index) {
 			let current = this.head;
@@ -80,9 +79,8 @@ function startAdvancedAnimation(advancedOffsetNumber, speed) {
 			if (index >= this.length) {
 				return null;
 			}
-			while (index > 0) {
+			for(let a = 0; a < index; a++) {
 				current = current.next;
-				index--;
 			}
 			return current;
 		}
@@ -91,9 +89,8 @@ function startAdvancedAnimation(advancedOffsetNumber, speed) {
 			if (index >= this.length) {
 				return null;
 			}
-			while (index > 0) {
+			for(let a = 0; a < index; a++){
 				current = current.previous;
-				index--;
 			}
 			return current.value;
 		}
@@ -126,7 +123,7 @@ function startAdvancedAnimation(advancedOffsetNumber, speed) {
 		public deleteNodeByIndex(index) {
 			let current = this.head;
 			if (index >= this.length) {
-				return current;
+				return null;
 			}
 			if (index == 0) {
 				this.head = this.head.next;
@@ -136,14 +133,10 @@ function startAdvancedAnimation(advancedOffsetNumber, speed) {
 					this.tail = null;
 				}
 				this.length--;
-				if(this.length == 1) {
-					this.tail = this.head;
-				}
 				return this.head;
 			}
-			while (index > 0) {
+			for (let a = 0; a < index; a++) {
 				current = current.next;
-				index--;
 			}
 			if (current.next) {
 				current.previous.next = current.next;
@@ -158,7 +151,7 @@ function startAdvancedAnimation(advancedOffsetNumber, speed) {
 		public deleteNodeByIndexFromBack(index) {
 			let current = this.tail;
 			if (index >= this.length) {
-				return current;
+				return null;
 			}
 			if (index == 0) {
 				this.tail = this.tail.previous;
@@ -168,18 +161,14 @@ function startAdvancedAnimation(advancedOffsetNumber, speed) {
 					this.head = null;
 				}
 				this.length--;
-				if(this.length == 1) {
-					this.head = this.tail;
-				}
 				return this.head;
 			}
-			while (index > 0) {
+			for (let a = 0; a < index; a++) {
 				current = current.previous;
-				index--;
 			}
 			if (current.previous) {
-				current.next.previous = current.previous;
 				current.previous.next = current.next;
+				current.next.previous = current.previous;
 			} else {
 				this.head = current.next;
 				this.head.previous = null;
@@ -187,7 +176,6 @@ function startAdvancedAnimation(advancedOffsetNumber, speed) {
 			this.length--;
 			return this.head;
 		}
-
 	}
 
 	class Pixel {
@@ -206,8 +194,8 @@ function startAdvancedAnimation(advancedOffsetNumber, speed) {
 			}
 		}
 		public makeAlive(index) {
-			this.setNeighbour();
 			linkedPixels.deleteNodeByIndexFromBack(index);
+			this.setNeighbour();
 			data32[this.x + this.y * stageSize] = this.color;
 		}
 	}
@@ -230,9 +218,9 @@ function startAdvancedAnimation(advancedOffsetNumber, speed) {
 		//let randomIndex = Math.floor(Math.random() * linkedPixels.length);
 
 		let randomIndex = 0;
-		/*if (linkedPixels.length > advancedOffsetNumber) {
+		if (linkedPixels.length > advancedOffsetNumber) {
 			randomIndex = advancedOffsetNumber;
-		}*/
+		}
 
 		let pixel = linkedPixels.getValueByIndexFromBack(randomIndex);
 
@@ -282,10 +270,10 @@ function startAdvancedAnimation(advancedOffsetNumber, speed) {
 
 
 	activatePixel(400, 400, 0xFFFF0000, true);
-			getNextPixel(data32);
+	/*getNextPixel(data32);
 	console.log(linkedPixels);
-			getNextPixel(data32);
-	console.log(linkedPixels);
+	getNextPixel(data32);
+	console.log(linkedPixels);/*
 	
 	/*activatePixel(200, 200, 0xFFFF0000, true);
 	activatePixel(600, 200, 0xFF00FF00, true);
@@ -294,7 +282,7 @@ function startAdvancedAnimation(advancedOffsetNumber, speed) {
 	activatePixel(400, 400, 0xFF00FFFF, true);*/
 
 	let interval = 1000 / 30;
-	let drawsPerTick = parseInt(speed);
+	let drawsPerTick = parseInt(speed)*1;
 
 	let start = 0, end = 0, time = 0;
 	intervalIndex = setInterval(function() {
@@ -302,7 +290,6 @@ function startAdvancedAnimation(advancedOffsetNumber, speed) {
 		for (let a = 0; a < drawsPerTick; a++) {
 			getNextPixel(data32);
 		}
-		clearInterval(intervalIndex);
 		end = window.performance.now();
 		time = end - start;
 		if (time > 4) {
@@ -467,6 +454,6 @@ function start() {
 	}
 
 	let animationTypes: Array<AnimationTypes> = new Array<AnimationTypes>();
-	animationTypes.push(new AnimationTypes("advanced", 7, startAdvancedAnimation));
+	animationTypes.push(new AnimationTypes("advanced", 0, startAdvancedAnimation, { sliderSpeed: { min: 1, max: 50000 } }));
 	animationTypes.push(new AnimationTypes("spiral", 13, startSpiralAnimation, { sliderSpeed: { min: 1, max: 50000 } }));
 }
