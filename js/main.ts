@@ -21,7 +21,7 @@ axisArray[13] = 1;
 axisArray[14] = -1;
 axisArray[15] = 0;
 
-const stageSize = 800;
+const stageSize = 1600;
 const stageSizeX2 = stageSize * stageSize;
 const canv = <HTMLCanvasElement>document.getElementById("container0");
 const ctx = canv.getContext("2d");
@@ -268,7 +268,7 @@ function startAdvancedAnimation(advancedOffsetNumber, speed) {
 	}*/
 
 
-	activatePixel(400, 400, 0xFFFF0000, true);
+	activatePixel(stageSize/2, stageSize/2, 0xFFFF0000, true);
 	
 	/*activatePixel(200, 200, 0xFFFF0000, true);
 	activatePixel(600, 200, 0xFF00FF00, true);
@@ -411,6 +411,30 @@ class AnimationTypes {
 
 function start() {
 
+	colorArray2();
+
+	let animationTypes: Array<AnimationTypes> = new Array<AnimationTypes>();
+	animationTypes.push(new AnimationTypes("advanced", 0, startAdvancedAnimation, { sliderSpeed: { min: 1, max: 50000 } }));
+	animationTypes.push(new AnimationTypes("spiral", 13, startSpiralAnimation, { sliderSpeed: { min: 1, max: 50000 } }));
+}
+
+function colorArray2() {
+	let hexColor = 0xFFFF0000;
+	for (let a = 0; a < 256; a++) {
+		let tempHexColor = hexColor - 0x00010000;
+		colorArray[hexColor] = tempHexColor;
+		hexColor = tempHexColor;
+	}
+	colorArray[0xFF000000] = 0xFFFF0000;
+	/*hexColor = 0xFF000000;
+	for (let a = 0; a < 255; a++) {
+		let tempHexColor = hexColor + 0x00010000;
+		colorArray[hexColor] = tempHexColor;
+		hexColor = tempHexColor;
+	}*/
+}
+
+function colorArray1() {
 	let hexColor = 0xFFFF0000;
 	for (let a = 0; a < 255; a++) {
 		let tempHexColor = hexColor + 0x00000100;
@@ -447,8 +471,4 @@ function start() {
 		colorArray[hexColor] = tempHexColor;
 		hexColor = tempHexColor;
 	}
-
-	let animationTypes: Array<AnimationTypes> = new Array<AnimationTypes>();
-	animationTypes.push(new AnimationTypes("advanced", 0, startAdvancedAnimation, { sliderSpeed: { min: 1, max: 50000 } }));
-	animationTypes.push(new AnimationTypes("spiral", 13, startSpiralAnimation, { sliderSpeed: { min: 1, max: 50000 } }));
 }

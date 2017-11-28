@@ -16,7 +16,7 @@ axisArray[12] = -1;
 axisArray[13] = 1;
 axisArray[14] = -1;
 axisArray[15] = 0;
-var stageSize = 800;
+var stageSize = 1600;
 var stageSizeX2 = stageSize * stageSize;
 var canv = document.getElementById("container0");
 var ctx = canv.getContext("2d");
@@ -222,16 +222,16 @@ function startAdvancedAnimation(advancedOffsetNumber, speed) {
             pixel2DArray[a][b] = null;
         }
     }
-    var cc = 0;
-    for (var a = 0; a < 9; a++) {
-        for (var b = 0; b < 799; b++) {
-            if (cc % 2 == 0)
-                activatePixel(b, a * 80 + 30, 0x00000000, false);
+    /*let cc = 0;
+    for(let a = 0; a < 9; a++) {
+        for(let b = 0; b < 799; b++) {
+            if(cc%2==0)
+                activatePixel(b, a*80+30, 0x00000000, false);
             else
-                activatePixel(b + 1, a * 80 + 30, 0x00000000, false);
+                activatePixel(b+1, a*80+30, 0x00000000, false);
         }
         cc++;
-    }
+    }*/
     /*for (let a = 100; a < 700; a++) {
         activatePixel(a, 500, 0xFF000000, false);
     }
@@ -244,7 +244,7 @@ function startAdvancedAnimation(advancedOffsetNumber, speed) {
     for (let a = 502; a < 800; a++) {
         activatePixel(400, a, 0xFF000000, false);
     }*/
-    activatePixel(400, 400, 0xFFFF0000, true);
+    activatePixel(stageSize / 2, stageSize / 2, 0xFFFF0000, true);
     /*activatePixel(200, 200, 0xFFFF0000, true);
     activatePixel(600, 200, 0xFF00FF00, true);
     activatePixel(200, 600, 0xFF0000FF, true);
@@ -382,6 +382,27 @@ var AnimationTypes = /** @class */ (function () {
     return AnimationTypes;
 }());
 function start() {
+    colorArray2();
+    var animationTypes = new Array();
+    animationTypes.push(new AnimationTypes("advanced", 0, startAdvancedAnimation, { sliderSpeed: { min: 1, max: 50000 } }));
+    animationTypes.push(new AnimationTypes("spiral", 13, startSpiralAnimation, { sliderSpeed: { min: 1, max: 50000 } }));
+}
+function colorArray2() {
+    var hexColor = 0xFFFF0000;
+    for (var a = 0; a < 256; a++) {
+        var tempHexColor = hexColor - 0x00010000;
+        colorArray[hexColor] = tempHexColor;
+        hexColor = tempHexColor;
+    }
+    colorArray[0xFF000000] = 0xFFFF0000;
+    /*hexColor = 0xFF000000;
+    for (let a = 0; a < 255; a++) {
+        let tempHexColor = hexColor + 0x00010000;
+        colorArray[hexColor] = tempHexColor;
+        hexColor = tempHexColor;
+    }*/
+}
+function colorArray1() {
     var hexColor = 0xFFFF0000;
     for (var a = 0; a < 255; a++) {
         var tempHexColor = hexColor + 0x00000100;
@@ -418,7 +439,4 @@ function start() {
         colorArray[hexColor] = tempHexColor;
         hexColor = tempHexColor;
     }
-    var animationTypes = new Array();
-    animationTypes.push(new AnimationTypes("advanced", 0, startAdvancedAnimation, { sliderSpeed: { min: 1, max: 50000 } }));
-    animationTypes.push(new AnimationTypes("spiral", 13, startSpiralAnimation, { sliderSpeed: { min: 1, max: 50000 } }));
 }
