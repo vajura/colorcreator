@@ -55,17 +55,6 @@ function startAdvancedAnimation(advancedOffsetNumber, speed) {
             }
             return current.value;
         };
-        LinkedPixels.prototype.getValueByIndexFromBack = function (index) {
-            var current = this.tail;
-            if (index >= this.length) {
-                return null;
-            }
-            while (index > 0) {
-                current = current.previous;
-                index--;
-            }
-            return current.value;
-        };
         LinkedPixels.prototype.getNodeByIndex = function (index) {
             var current = this.head;
             if (index >= this.length) {
@@ -76,6 +65,17 @@ function startAdvancedAnimation(advancedOffsetNumber, speed) {
                 index--;
             }
             return current;
+        };
+        LinkedPixels.prototype.getValueByIndexFromBack = function (index) {
+            var current = this.tail;
+            if (index >= this.length) {
+                return null;
+            }
+            while (index > 0) {
+                current = current.previous;
+                index--;
+            }
+            return current.value;
         };
         LinkedPixels.prototype.deleteNodeByNode = function (value) {
             var current = this.head, previous;
@@ -137,6 +137,40 @@ function startAdvancedAnimation(advancedOffsetNumber, speed) {
             this.length--;
             return this.head;
         };
+        LinkedPixels.prototype.deleteNodeByIndexFromBack = function (index) {
+            var current = this.tail;
+            if (index >= this.length) {
+                return current;
+            }
+            if (index == 0) {
+                this.tail = this.tail.previous;
+                if (this.tail) {
+                    this.tail.next = null;
+                }
+                else {
+                    this.head = null;
+                }
+                this.length--;
+                if (this.length == 1) {
+                    this.head = this.tail;
+                }
+                return this.head;
+            }
+            while (index > 0) {
+                current = current.previous;
+                index--;
+            }
+            if (current.previous) {
+                current.next.previous = current.previous;
+                current.previous.next = current.next;
+            }
+            else {
+                this.head = current.next;
+                this.head.previous = null;
+            }
+            this.length--;
+            return this.head;
+        };
         return LinkedPixels;
     }());
     var Pixel = /** @class */ (function () {
@@ -158,7 +192,7 @@ function startAdvancedAnimation(advancedOffsetNumber, speed) {
         };
         Pixel.prototype.makeAlive = function (index) {
             this.setNeighbour();
-            linkedPixels.deleteNodeByIndex(index);
+            linkedPixels.deleteNodeByIndexFromBack(index);
             data32[this.x + this.y * stageSize] = this.color;
         };
         return Pixel;
@@ -177,15 +211,14 @@ function startAdvancedAnimation(advancedOffsetNumber, speed) {
         //let randomIndex = 1;
         //let randomIndex = Math.floor(Math.random() * linkedPixels.length);
         var randomIndex = 0;
-        if (linkedPixels.length > advancedOffsetNumber) {
+        /*if (linkedPixels.length > advancedOffsetNumber) {
             randomIndex = advancedOffsetNumber;
-        }
+        }*/
         var pixel = linkedPixels.getValueByIndexFromBack(randomIndex);
         if (pixel) {
             pixel.makeAlive(randomIndex);
         }
         else {
-            console.log("A");
             clearInterval(intervalIndex);
         }
     }
@@ -223,19 +256,25 @@ function startAdvancedAnimation(advancedOffsetNumber, speed) {
         activatePixel(400, a, 0xFF000000, false);
     }*/
     activatePixel(400, 400, 0xFFFF0000, true);
+    console.log(linkedPixels);
+    getNextPixel(data32);
+    console.log(linkedPixels);
+    getNextPixel(data32);
+    console.log(linkedPixels);
     /*activatePixel(200, 200, 0xFFFF0000, true);
     activatePixel(600, 200, 0xFF00FF00, true);
     activatePixel(200, 600, 0xFF0000FF, true);
     activatePixel(600, 600, 0xFFFFFF00, true);
     activatePixel(400, 400, 0xFF00FFFF, true);*/
     var interval = 1000 / 30;
-    var drawsPerTick = parseInt(speed) * 2;
+    var drawsPerTick = parseInt(speed);
     var start = 0, end = 0, time = 0;
     intervalIndex = setInterval(function () {
         start = window.performance.now();
         for (var a = 0; a < drawsPerTick; a++) {
             getNextPixel(data32);
         }
+        clearInterval(intervalIndex);
         end = window.performance.now();
         time = end - start;
         if (time > 4) {

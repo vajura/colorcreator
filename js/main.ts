@@ -36,15 +36,15 @@ let intervalIndex;
 function startAdvancedAnimation(advancedOffsetNumber, speed) {
 	advancedOffsetNumber = parseInt(advancedOffsetNumber);
 
-	interface node {
+	interface Node {
 		value: Pixel;
-		next: node;
-		previous: node;
+		next: Node;
+		previous: Node;
 	}
 
 	class LinkedPixels {
-		public head: node = null;
-		public tail: node = null;
+		public head: Node = null;
+		public tail: Node = null;
 		public length: number = 0;
 
 		constructor() {
@@ -52,7 +52,7 @@ function startAdvancedAnimation(advancedOffsetNumber, speed) {
 		}
 
 		public push(value) {
-			let head = this.head, current = head, previous = head;
+			let head = this.head;
 			if (head) {
 				let next = { value: value, previous: this.tail, next: null };
 				this.tail.next = next;
@@ -62,6 +62,7 @@ function startAdvancedAnimation(advancedOffsetNumber, speed) {
 				this.tail = this.head;
 			}
 			this.length++;
+			console.log(this.length);
 		}
 		public getValueByIndex(index) {
 			let current = this.head;
@@ -70,17 +71,6 @@ function startAdvancedAnimation(advancedOffsetNumber, speed) {
 			}
 			while (index > 0) {
 				current = current.next;
-				index--;
-			}
-			return current.value;
-		}
-		public getValueByIndexFromBack(index) {
-			let current = this.tail;
-			if (index >= this.length) {
-				return null;
-			}
-			while (index > 0) {
-				current = current.previous;
 				index--;
 			}
 			return current.value;
@@ -95,6 +85,17 @@ function startAdvancedAnimation(advancedOffsetNumber, speed) {
 				index--;
 			}
 			return current;
+		}
+		public getValueByIndexFromBack(index) {
+			let current = this.tail;
+			if (index >= this.length) {
+				return null;
+			}
+			while (index > 0) {
+				current = current.previous;
+				index--;
+			}
+			return current.value;
 		}
 		public deleteNodeByNode(value) {
 			let current = this.head, previous;
@@ -154,6 +155,38 @@ function startAdvancedAnimation(advancedOffsetNumber, speed) {
 			this.length--;
 			return this.head;
 		}
+		public deleteNodeByIndexFromBack(index) {
+			let current = this.tail;
+			if (index >= this.length) {
+				return current;
+			}
+			if (index == 0) {
+				this.tail = this.tail.previous;
+				if (this.tail) {
+					this.tail.next = null;
+				} else {
+					this.head = null;
+				}
+				this.length--;
+				if(this.length == 1) {
+					this.head = this.tail;
+				}
+				return this.head;
+			}
+			while (index > 0) {
+				current = current.previous;
+				index--;
+			}
+			if (current.previous) {
+				current.next.previous = current.previous;
+				current.previous.next = current.next;
+			} else {
+				this.head = current.next;
+				this.head.previous = null;
+			}
+			this.length--;
+			return this.head;
+		}
 
 	}
 
@@ -174,7 +207,7 @@ function startAdvancedAnimation(advancedOffsetNumber, speed) {
 		}
 		public makeAlive(index) {
 			this.setNeighbour();
-			linkedPixels.deleteNodeByIndex(index);
+			linkedPixels.deleteNodeByIndexFromBack(index);
 			data32[this.x + this.y * stageSize] = this.color;
 		}
 	}
@@ -197,9 +230,9 @@ function startAdvancedAnimation(advancedOffsetNumber, speed) {
 		//let randomIndex = Math.floor(Math.random() * linkedPixels.length);
 
 		let randomIndex = 0;
-		if (linkedPixels.length > advancedOffsetNumber) {
+		/*if (linkedPixels.length > advancedOffsetNumber) {
 			randomIndex = advancedOffsetNumber;
-		}
+		}*/
 
 		let pixel = linkedPixels.getValueByIndexFromBack(randomIndex);
 
@@ -249,7 +282,11 @@ function startAdvancedAnimation(advancedOffsetNumber, speed) {
 
 
 	activatePixel(400, 400, 0xFFFF0000, true);
-
+			getNextPixel(data32);
+	console.log(linkedPixels);
+			getNextPixel(data32);
+	console.log(linkedPixels);
+	
 	/*activatePixel(200, 200, 0xFFFF0000, true);
 	activatePixel(600, 200, 0xFF00FF00, true);
 	activatePixel(200, 600, 0xFF0000FF, true);
@@ -257,7 +294,7 @@ function startAdvancedAnimation(advancedOffsetNumber, speed) {
 	activatePixel(400, 400, 0xFF00FFFF, true);*/
 
 	let interval = 1000 / 30;
-	let drawsPerTick = parseInt(speed) * 2;
+	let drawsPerTick = parseInt(speed);
 
 	let start = 0, end = 0, time = 0;
 	intervalIndex = setInterval(function() {
@@ -265,6 +302,7 @@ function startAdvancedAnimation(advancedOffsetNumber, speed) {
 		for (let a = 0; a < drawsPerTick; a++) {
 			getNextPixel(data32);
 		}
+		clearInterval(intervalIndex);
 		end = window.performance.now();
 		time = end - start;
 		if (time > 4) {
