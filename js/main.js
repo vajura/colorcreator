@@ -23,6 +23,359 @@ var ctx = canv.getContext("2d");
 var imageData = ctx.createImageData(stageSize, stageSize);
 var data32 = new Uint32Array(imageData.data.buffer);
 var intervalIndex;
+function startSpreadAnimation(advancedOffsetNumber, speed) {
+    advancedOffsetNumber = parseInt(advancedOffsetNumber);
+    var Node = /** @class */ (function () {
+        function Node(key, value) {
+            this.left = null;
+            this.right = null;
+            this.height = null;
+            this.left = null;
+            this.right = null;
+            this.height = null;
+            this.key = key;
+            this.value = value;
+        }
+        Node.prototype.rotateRight = function () {
+            var other = this.left;
+            this.left = other.right;
+            other.right = this;
+            this.height = Math.max(this.leftHeight(), this.rightHeight()) + 1;
+            other.height = Math.max(other.leftHeight(), this.height) + 1;
+            return other;
+        };
+        Node.prototype.rotateLeft = function () {
+            var other = this.right;
+            this.right = other.left;
+            other.left = this;
+            this.height = Math.max(this.leftHeight(), this.rightHeight()) + 1;
+            other.height = Math.max(other.rightHeight(), this.height) + 1;
+            return other;
+        };
+        Node.prototype.leftHeight = function () {
+            if (!this.left) {
+                return -1;
+            }
+            return this.left.height;
+        };
+        Node.prototype.rightHeight = function () {
+            if (!this.right) {
+                return -1;
+            }
+            return this.right.height;
+        };
+        return Node;
+    }());
+    var PixelTree = /** @class */ (function () {
+        function PixelTree(customCompare) {
+            if (customCompare === void 0) { customCompare = null; }
+            this.BalanceState = {
+                UNBALANCED_RIGHT: 1,
+                SLIGHTLY_UNBALANCED_RIGHT: 2,
+                BALANCED: 3,
+                SLIGHTLY_UNBALANCED_LEFT: 4,
+                UNBALANCED_LEFT: 5
+            };
+            this._root = null;
+            this._size = 0;
+            if (customCompare) {
+                this._compare = customCompare;
+            }
+        }
+        PixelTree.prototype._compare = function (a, b) {
+            if (a > b) {
+                return 1;
+            }
+            if (a < b) {
+                return -1;
+            }
+            return 0;
+        };
+        ;
+        PixelTree.prototype.getRandom = function () {
+            var randomIndex = Math.floor(Math.random() * 3);
+            var current = this._root;
+            if (current && this._root.left)
+                return this._root.left;
+            return this._root;
+            /*while(randomIndex != 0 && current.left != null && current.right != null) {
+                if(randomIndex == 1) {
+                    current = current.left;
+                }
+                if (randomIndex == 2) {
+                    current = current.right;
+                }
+            }
+            return current;*/
+        };
+        PixelTree.prototype.insert = function (value) {
+            this._root = this._insert(value.key, value, this._root);
+            this._size++;
+        };
+        ;
+        PixelTree.prototype._insert = function (key, value, root) {
+            // Perform regular BST insertion
+            if (root === null) {
+                return new Node(key, value);
+            }
+            if (this._compare(key, root.key) < 0) {
+                root.left = this._insert(key, value, root.left);
+            }
+            else if (this._compare(key, root.key) > 0) {
+                root.right = this._insert(key, value, root.right);
+            }
+            else {
+                // It's a duplicate so insertion failed, decrement size to make up for it
+                this._size--;
+                return root;
+            }
+            // Update height and rebalance tree
+            root.height = Math.max(root.leftHeight(), root.rightHeight()) + 1;
+            var balanceState = this.getBalanceState(root);
+            if (balanceState === this.BalanceState.UNBALANCED_LEFT) {
+                if (this._compare(key, root.left.key) < 0) {
+                    // Left left case
+                    root = root.rotateRight();
+                }
+                else {
+                    // Left right case
+                    root.left = root.left.rotateLeft();
+                    return root.rotateRight();
+                }
+            }
+            if (balanceState === this.BalanceState.UNBALANCED_RIGHT) {
+                if (this._compare(key, root.right.key) > 0) {
+                    // Right right case
+                    root = root.rotateLeft();
+                }
+                else {
+                    // Right left case
+                    root.right = root.right.rotateRight();
+                    return root.rotateLeft();
+                }
+            }
+            return root;
+        };
+        ;
+        PixelTree.prototype["delete"] = function (key) {
+            this._root = this._delete(key, this._root);
+            this._size--;
+        };
+        ;
+        PixelTree.prototype._delete = function (key, root) {
+            // Perform regular BST deletion
+            if (root === null) {
+                this._size++;
+                return root;
+            }
+            if (this._compare(key, root.key) < 0) {
+                // The key to be deleted is in the left sub-tree
+                root.left = this._delete(key, root.left);
+            }
+            else if (this._compare(key, root.key) > 0) {
+                // The key to be deleted is in the right sub-tree
+                root.right = this._delete(key, root.right);
+            }
+            else {
+                // root is the node to be deleted
+                if (!root.left && !root.right) {
+                    root = null;
+                }
+                else if (!root.left && root.right) {
+                    root = root.right;
+                }
+                else if (root.left && !root.right) {
+                    root = root.left;
+                }
+                else {
+                    // Node has 2 children, get the in-order successor
+                    var inOrderSuccessor = this.minValueNode(root.right);
+                    root.key = inOrderSuccessor.key;
+                    root.value = inOrderSuccessor.value;
+                    root.right = this._delete(inOrderSuccessor.key, root.right);
+                }
+            }
+            if (root === null) {
+                return root;
+            }
+            // Update height and rebalance tree
+            root.height = Math.max(root.leftHeight(), root.rightHeight()) + 1;
+            var balanceState = this.getBalanceState(root);
+            if (balanceState === this.BalanceState.UNBALANCED_LEFT) {
+                // Left left case
+                if (this.getBalanceState(root.left) === this.BalanceState.BALANCED ||
+                    this.getBalanceState(root.left) === this.BalanceState.SLIGHTLY_UNBALANCED_LEFT) {
+                    return root.rotateRight();
+                }
+                // Left right case
+                if (this.getBalanceState(root.left) === this.BalanceState.SLIGHTLY_UNBALANCED_RIGHT) {
+                    root.left = root.left.rotateLeft();
+                    return root.rotateRight();
+                }
+            }
+            if (balanceState === this.BalanceState.UNBALANCED_RIGHT) {
+                // Right right case
+                if (this.getBalanceState(root.right) === this.BalanceState.BALANCED ||
+                    this.getBalanceState(root.right) === this.BalanceState.SLIGHTLY_UNBALANCED_RIGHT) {
+                    return root.rotateLeft();
+                }
+                // Right left case
+                if (this.getBalanceState(root.right) === this.BalanceState.SLIGHTLY_UNBALANCED_LEFT) {
+                    root.right = root.right.rotateRight();
+                    return root.rotateLeft();
+                }
+            }
+            return root;
+        };
+        ;
+        PixelTree.prototype.get = function (key) {
+            if (this._root === null) {
+                return null;
+            }
+            return this._get(key, this._root).value;
+        };
+        ;
+        PixelTree.prototype._get = function (key, root) {
+            if (key === root.key) {
+                return root;
+            }
+            if (this._compare(key, root.key) < 0) {
+                if (!root.left) {
+                    return null;
+                }
+                return this._get(key, root.left);
+            }
+            if (!root.right) {
+                return null;
+            }
+            return this._get(key, root.right);
+        };
+        ;
+        PixelTree.prototype.contains = function (key) {
+            if (this._root === null) {
+                return false;
+            }
+            return !!this._get(key, this._root);
+        };
+        ;
+        PixelTree.prototype.findMinimum = function () {
+            return this.minValueNode(this._root).key;
+        };
+        ;
+        PixelTree.prototype.minValueNode = function (root) {
+            var current = root;
+            while (current.left) {
+                current = current.left;
+            }
+            return current;
+        };
+        PixelTree.prototype.findMaximum = function () {
+            return this.maxValueNode(this._root).key;
+        };
+        ;
+        PixelTree.prototype.maxValueNode = function (root) {
+            var current = root;
+            while (current.right) {
+                current = current.right;
+            }
+            return current;
+        };
+        PixelTree.prototype.size = function () {
+            return this._size;
+        };
+        ;
+        PixelTree.prototype.isEmpty = function () {
+            return this._size === 0;
+        };
+        ;
+        PixelTree.prototype.getBalanceState = function (node) {
+            var heightDifference = node.leftHeight() - node.rightHeight();
+            switch (heightDifference) {
+                case -2: return this.BalanceState.UNBALANCED_RIGHT;
+                case -1: return this.BalanceState.SLIGHTLY_UNBALANCED_RIGHT;
+                case 1: return this.BalanceState.SLIGHTLY_UNBALANCED_LEFT;
+                case 2: return this.BalanceState.UNBALANCED_LEFT;
+                default: return this.BalanceState.BALANCED;
+            }
+        };
+        return PixelTree;
+    }());
+    var Pixel = /** @class */ (function () {
+        function Pixel(x, y, color) {
+            this.x = x;
+            this.y = y;
+            this.color = color;
+            this.key = x + y * stageSize;
+        }
+        Pixel.prototype.setNeighbour = function () {
+            for (var a = 0; a < 16; a += 2) {
+                var tempY = this.y + axisArray[a + 1];
+                var tempX = this.x + axisArray[a];
+                if (tempX >= 0 && tempX < stageSize && tempY >= 0 && tempY < stageSize && !pixel2DArray[tempY][tempX]) {
+                    var pixel = new Pixel(tempX, tempY, colorArray[this.color]);
+                    //linkedPixels.push(pixel);
+                    pixelTree.insert(pixel);
+                    pixel2DArray[tempY][tempX] = pixel;
+                }
+            }
+        };
+        Pixel.prototype.makeAlive = function (node) {
+            //linkedPixels.deleteNodeByIndexFromBack(index);
+            pixelTree["delete"](node);
+            this.setNeighbour();
+            data32[this.x + this.y * stageSize] = this.color;
+        };
+        return Pixel;
+    }());
+    function activatePixel(x, y, color, addToArray) {
+        if (!pixel2DArray[y][x]) {
+            var pixel = new Pixel(x, y, color);
+            if (addToArray) {
+                pixel.setNeighbour();
+            }
+            pixel2DArray[y][x] = pixel;
+            data32[x + y * stageSize] = pixel2DArray[y][x].color;
+        }
+    }
+    function getNextPixel(data32) {
+        //let randomIndex = Math.floor(Math.random() * linkedPixels.length);
+        //let randomIndex = Math.floor(Math.random() * pixelTree.size());
+        //let pixel = linkedPixels.getValueByIndexFromBack(randomIndex);
+        var node = pixelTree.getRandom();
+        if (node) {
+            node.value.makeAlive(node);
+        }
+        else {
+            clearInterval(intervalIndex);
+        }
+    }
+    var pixel2DArray = new Array();
+    var pixelTree = new PixelTree();
+    imageData = ctx.createImageData(stageSize, stageSize);
+    data32 = new Uint32Array(imageData.data.buffer);
+    for (var a = 0; a < stageSize; a++) {
+        pixel2DArray[a] = new Array();
+        for (var b = 0; b < stageSize; b++) {
+            pixel2DArray[a][b] = null;
+        }
+    }
+    activatePixel(stageSize / 2, stageSize / 2, 0xFFFF0000, true);
+    var interval = 1000 / 30;
+    var drawsPerTick = parseInt(speed) * 1;
+    var start = 0, end = 0, time = 0;
+    intervalIndex = setInterval(function () {
+        start = window.performance.now();
+        for (var a = 0; a < drawsPerTick; a++) {
+            getNextPixel(data32);
+        }
+        end = window.performance.now();
+        time = end - start;
+        if (time > 4) {
+            console.log("Calc: " + time.toFixed(4));
+        }
+        ctx.putImageData(imageData, 0, 0);
+    }, interval);
+}
 function startAdvancedAnimation(advancedOffsetNumber, speed) {
     advancedOffsetNumber = parseInt(advancedOffsetNumber);
     var LinkedPixels = /** @class */ (function () {
@@ -212,7 +565,6 @@ function startAdvancedAnimation(advancedOffsetNumber, speed) {
         }
     }
     var pixel2DArray = new Array();
-    var hashedDeadPixels = new Array();
     var linkedPixels = new LinkedPixels();
     imageData = ctx.createImageData(stageSize, stageSize);
     data32 = new Uint32Array(imageData.data.buffer);
@@ -382,8 +734,9 @@ var AnimationTypes = /** @class */ (function () {
     return AnimationTypes;
 }());
 function start() {
-    colorArray2();
+    colorArray1();
     var animationTypes = new Array();
+    animationTypes.push(new AnimationTypes("spread", 0, startSpreadAnimation, { sliderSpeed: { min: 1, max: 50000 } }));
     animationTypes.push(new AnimationTypes("advanced", 0, startAdvancedAnimation, { sliderSpeed: { min: 1, max: 50000 } }));
     animationTypes.push(new AnimationTypes("spiral", 13, startSpiralAnimation, { sliderSpeed: { min: 1, max: 50000 } }));
 }
