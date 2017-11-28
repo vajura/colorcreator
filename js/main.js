@@ -49,9 +49,8 @@ function startAdvancedAnimation(advancedOffsetNumber, speed) {
             if (index >= this.length) {
                 return null;
             }
-            while (index > 0) {
+            for (var a = 0; a < index; a++) {
                 current = current.next;
-                index--;
             }
             return current.value;
         };
@@ -223,16 +222,16 @@ function startAdvancedAnimation(advancedOffsetNumber, speed) {
             pixel2DArray[a][b] = null;
         }
     }
-    /*let cc = 0;
-    for(let a = 0; a < 9; a++) {
-        for(let b = 0; b < 799; b++) {
-            if(cc%2==0)
-                activatePixel(b, a*80+30, 0x00000000, false);
+    var cc = 0;
+    for (var a = 0; a < 9; a++) {
+        for (var b = 0; b < 799; b++) {
+            if (cc % 2 == 0)
+                activatePixel(b, a * 80 + 30, 0x00000000, false);
             else
-                activatePixel(b+1, a*80+30, 0x00000000, false);
+                activatePixel(b + 1, a * 80 + 30, 0x00000000, false);
         }
         cc++;
-    }*/
+    }
     /*for (let a = 100; a < 700; a++) {
         activatePixel(a, 500, 0xFF000000, false);
     }
@@ -246,11 +245,6 @@ function startAdvancedAnimation(advancedOffsetNumber, speed) {
         activatePixel(400, a, 0xFF000000, false);
     }*/
     activatePixel(400, 400, 0xFFFF0000, true);
-    /*getNextPixel(data32);
-    console.log(linkedPixels);
-    getNextPixel(data32);
-    console.log(linkedPixels);/*
-    
     /*activatePixel(200, 200, 0xFFFF0000, true);
     activatePixel(600, 200, 0xFF00FF00, true);
     activatePixel(200, 600, 0xFF0000FF, true);

@@ -68,9 +68,8 @@ function startAdvancedAnimation(advancedOffsetNumber, speed) {
 			if (index >= this.length) {
 				return null;
 			}
-			while (index > 0) {
+			for(let a = 0; a < index; a++) {
 				current = current.next;
-				index--;
 			}
 			return current.value;
 		}
@@ -270,10 +269,6 @@ function startAdvancedAnimation(advancedOffsetNumber, speed) {
 
 
 	activatePixel(400, 400, 0xFFFF0000, true);
-	/*getNextPixel(data32);
-	console.log(linkedPixels);
-	getNextPixel(data32);
-	console.log(linkedPixels);/*
 	
 	/*activatePixel(200, 200, 0xFFFF0000, true);
 	activatePixel(600, 200, 0xFF00FF00, true);
