@@ -21,7 +21,7 @@ axisArray[13] = 1;
 axisArray[14] = -1;
 axisArray[15] = 0;
 
-const stageSize = 1600;
+const stageSize = 1000;
 const stageSizeX2 = stageSize * stageSize;
 const canv = <HTMLCanvasElement>document.getElementById("container0");
 const ctx = canv.getContext("2d");
@@ -30,372 +30,6 @@ let imageData = ctx.createImageData(stageSize, stageSize);
 let data32 = new Uint32Array(imageData.data.buffer);
 
 let intervalIndex;
-
-function startSpreadAnimation(advancedOffsetNumber, speed) {
-	advancedOffsetNumber = parseInt(advancedOffsetNumber);
-
-	class Node {
-		public left = null;
-		public right = null;
-		public height = null;
-		public key;
-		public value;
-		constructor(key, value) {
-			this.left = null;
-			this.right = null;
-			this.height = null;
-			this.key = key;
-			this.value = value;
-		}
-
-		public rotateRight() {
-			var other = this.left;
-			this.left = other.right;
-			other.right = this;
-			this.height = Math.max(this.leftHeight(), this.rightHeight()) + 1;
-			other.height = Math.max(other.leftHeight(), this.height) + 1;
-			return other;
-		}
-		public rotateLeft() {
-			var other = this.right;
-			this.right = other.left;
-			other.left = this;
-			this.height = Math.max(this.leftHeight(), this.rightHeight()) + 1;
-			other.height = Math.max(other.rightHeight(), this.height) + 1;
-			return other;
-		}
-		public leftHeight() {
-			if (!this.left) {
-				return -1;
-			}
-			return this.left.height;
-		}
-		public rightHeight() {
-			if (!this.right) {
-				return -1;
-			}
-			return this.right.height;
-		}
-	}
-
-	class PixelTree {
-		public _root;
-		public _size;
-		public BalanceState = {
-			UNBALANCED_RIGHT: 1,
-			SLIGHTLY_UNBALANCED_RIGHT: 2,
-			BALANCED: 3,
-			SLIGHTLY_UNBALANCED_LEFT: 4,
-			UNBALANCED_LEFT: 5
-		};
-		constructor(customCompare = null) {
-			this._root = null;
-			this._size = 0;
-
-			if (customCompare) {
-				this._compare = customCompare;
-			}
-		}
-
-		private _compare(a, b) {
-			if (a > b) {
-				return 1;
-			}
-			if (a < b) {
-				return -1;
-			}
-			return 0;
-		};
-		public getRandom() {
-			let randomIndex = Math.floor(Math.random() * 3);
-			let current = this._root;
-			if (current && this._root.left)
-				return this._root.left;
-			return this._root;
-			/*while(randomIndex != 0 && current.left != null && current.right != null) {
-				if(randomIndex == 1) {
-					current = current.left;
-				}
-				if (randomIndex == 2) {
-					current = current.right;
-				}
-			}
-			return current;*/
-		}
-		public insert(value) {
-			this._root = this._insert(value.key, value, this._root);
-			this._size++;
-		};
-		private _insert(key, value, root) {
-			// Perform regular BST insertion
-			if (root === null) {
-				return new Node(key, value);
-			}
-
-			if (this._compare(key, root.key) < 0) {
-				root.left = this._insert(key, value, root.left);
-			} else if (this._compare(key, root.key) > 0) {
-				root.right = this._insert(key, value, root.right);
-			} else {
-				// It's a duplicate so insertion failed, decrement size to make up for it
-				this._size--;
-				return root;
-			}
-
-			// Update height and rebalance tree
-			root.height = Math.max(root.leftHeight(), root.rightHeight()) + 1;
-			var balanceState = this.getBalanceState(root);
-
-			if (balanceState === this.BalanceState.UNBALANCED_LEFT) {
-				if (this._compare(key, root.left.key) < 0) {
-					// Left left case
-					root = root.rotateRight();
-				} else {
-					// Left right case
-					root.left = root.left.rotateLeft();
-					return root.rotateRight();
-				}
-			}
-
-			if (balanceState === this.BalanceState.UNBALANCED_RIGHT) {
-				if (this._compare(key, root.right.key) > 0) {
-					// Right right case
-					root = root.rotateLeft();
-				} else {
-					// Right left case
-					root.right = root.right.rotateRight();
-					return root.rotateLeft();
-				}
-			}
-
-			return root;
-		};
-		public delete(key) {
-			this._root = this._delete(key, this._root);
-			this._size--;
-		};
-		private _delete(key, root) {
-			// Perform regular BST deletion
-			if (root === null) {
-				this._size++;
-				return root;
-			}
-
-			if (this._compare(key, root.key) < 0) {
-				// The key to be deleted is in the left sub-tree
-				root.left = this._delete(key, root.left);
-			} else if (this._compare(key, root.key) > 0) {
-				// The key to be deleted is in the right sub-tree
-				root.right = this._delete(key, root.right);
-			} else {
-				// root is the node to be deleted
-				if (!root.left && !root.right) {
-					root = null;
-				} else if (!root.left && root.right) {
-					root = root.right;
-				} else if (root.left && !root.right) {
-					root = root.left;
-				} else {
-					// Node has 2 children, get the in-order successor
-					var inOrderSuccessor = this.minValueNode(root.right);
-					root.key = inOrderSuccessor.key;
-					root.value = inOrderSuccessor.value;
-					root.right = this._delete(inOrderSuccessor.key, root.right);
-				}
-			}
-
-			if (root === null) {
-				return root;
-			}
-
-			// Update height and rebalance tree
-			root.height = Math.max(root.leftHeight(), root.rightHeight()) + 1;
-			var balanceState = this.getBalanceState(root);
-
-			if (balanceState === this.BalanceState.UNBALANCED_LEFT) {
-				// Left left case
-				if (this.getBalanceState(root.left) === this.BalanceState.BALANCED ||
-					this.getBalanceState(root.left) === this.BalanceState.SLIGHTLY_UNBALANCED_LEFT) {
-					return root.rotateRight();
-				}
-				// Left right case
-				if (this.getBalanceState(root.left) === this.BalanceState.SLIGHTLY_UNBALANCED_RIGHT) {
-					root.left = root.left.rotateLeft();
-					return root.rotateRight();
-				}
-			}
-
-			if (balanceState === this.BalanceState.UNBALANCED_RIGHT) {
-				// Right right case
-				if (this.getBalanceState(root.right) === this.BalanceState.BALANCED ||
-					this.getBalanceState(root.right) === this.BalanceState.SLIGHTLY_UNBALANCED_RIGHT) {
-					return root.rotateLeft();
-				}
-				// Right left case
-				if (this.getBalanceState(root.right) === this.BalanceState.SLIGHTLY_UNBALANCED_LEFT) {
-					root.right = root.right.rotateRight();
-					return root.rotateLeft();
-				}
-			}
-
-			return root;
-		};
-		public get(key) {
-			if (this._root === null) {
-				return null;
-			}
-
-			return this._get(key, this._root).value;
-		};
-		private _get(key, root) {
-			if (key === root.key) {
-				return root;
-			}
-
-			if (this._compare(key, root.key) < 0) {
-				if (!root.left) {
-					return null;
-				}
-				return this._get(key, root.left);
-			}
-
-			if (!root.right) {
-				return null;
-			}
-			return this._get(key, root.right);
-		};
-		public contains(key) {
-			if (this._root === null) {
-				return false;
-			}
-
-			return !!this._get(key, this._root);
-		};
-		public findMinimum() {
-			return this.minValueNode(this._root).key;
-		};
-		public minValueNode(root) {
-			var current = root;
-			while (current.left) {
-				current = current.left;
-			}
-			return current;
-		}
-		public findMaximum() {
-			return this.maxValueNode(this._root).key;
-		};
-
-
-		public maxValueNode(root) {
-			var current = root;
-			while (current.right) {
-				current = current.right;
-			}
-			return current;
-		}
-		public size() {
-			return this._size;
-		};
-		public isEmpty() {
-			return this._size === 0;
-		};
-		public getBalanceState(node) {
-			var heightDifference = node.leftHeight() - node.rightHeight();
-			switch (heightDifference) {
-				case -2: return this.BalanceState.UNBALANCED_RIGHT;
-				case -1: return this.BalanceState.SLIGHTLY_UNBALANCED_RIGHT;
-				case 1: return this.BalanceState.SLIGHTLY_UNBALANCED_LEFT;
-				case 2: return this.BalanceState.UNBALANCED_LEFT;
-				default: return this.BalanceState.BALANCED;
-			}
-		}
-	}
-
-	class Pixel {
-		public key;
-		constructor(public x: number, public y: number, public color) {
-			this.key = x + y * stageSize;
-		}
-
-		public setNeighbour() {
-			for (let a = 0; a < 16; a += 2) {
-				let tempY = this.y + axisArray[a + 1];
-				let tempX = this.x + axisArray[a];
-				if (tempX >= 0 && tempX < stageSize && tempY >= 0 && tempY < stageSize && !pixel2DArray[tempY][tempX]) {
-					let pixel = new Pixel(tempX, tempY, colorArray[this.color]);
-					//linkedPixels.push(pixel);
-					pixelTree.insert(pixel);
-					pixel2DArray[tempY][tempX] = pixel;
-				}
-			}
-		}
-		public makeAlive(node) {
-			//linkedPixels.deleteNodeByIndexFromBack(index);
-			pixelTree.delete(node);
-			this.setNeighbour();
-			data32[this.x + this.y * stageSize] = this.color;
-		}
-	}
-
-
-	function activatePixel(x: number, y: number, color, addToArray: boolean) {
-		if (!pixel2DArray[y][x]) {
-			let pixel = new Pixel(x, y, color);
-			if (addToArray) {
-				pixel.setNeighbour();
-			}
-			pixel2DArray[y][x] = pixel;
-			data32[x + y * stageSize] = pixel2DArray[y][x].color;
-		}
-	}
-
-	function getNextPixel(data32) {
-
-		//let randomIndex = Math.floor(Math.random() * linkedPixels.length);
-		//let randomIndex = Math.floor(Math.random() * pixelTree.size());
-
-		//let pixel = linkedPixels.getValueByIndexFromBack(randomIndex);
-		let node = pixelTree.getRandom();
-
-		if (node) {
-			node.value.makeAlive(node);
-		} else {
-			clearInterval(intervalIndex);
-		}
-	}
-
-	let pixel2DArray: Array<Array<Pixel>> = new Array<Array<Pixel>>();
-	let pixelTree = new PixelTree();
-
-	imageData = ctx.createImageData(stageSize, stageSize);
-	data32 = new Uint32Array(imageData.data.buffer);
-
-	for (let a = 0; a < stageSize; a++) {
-		pixel2DArray[a] = new Array<Pixel>();
-		for (let b = 0; b < stageSize; b++) {
-			pixel2DArray[a][b] = null;
-		}
-	}
-
-	activatePixel(stageSize / 2, stageSize / 2, 0xFFFF0000, true);
-
-	let interval = 1000 / 30;
-	let drawsPerTick = parseInt(speed) * 1;
-
-	let start = 0, end = 0, time = 0;
-	intervalIndex = setInterval(function() {
-		start = window.performance.now();
-		for (let a = 0; a < drawsPerTick; a++) {
-			getNextPixel(data32);
-		}
-		end = window.performance.now();
-		time = end - start;
-		if (time > 4) {
-			console.log("Calc: " + time.toFixed(4));
-		}
-		ctx.putImageData(imageData, 0, 0);
-	}, interval);
-}
 
 function startAdvancedAnimation(advancedOffsetNumber, speed) {
 	advancedOffsetNumber = parseInt(advancedOffsetNumber);
@@ -457,30 +91,26 @@ function startAdvancedAnimation(advancedOffsetNumber, speed) {
 			}
 			return current.value;
 		}
-		public deleteNodeByNode(value) {
-			let current = this.head, previous;
-			if (current.value == value) {
-				this.head = current.next;
-				if (this.head) {
+		public deleteNodeByNode(node) {
+			if(!node.previous) {
+				this.head = node.next;
+				if (!this.head) {
+					this.tail = null;
+				} else {
 					this.head.previous = null;
 				}
-				this.length--;
-				return this.head;
-			}
-			while (current.next) {
-				if (current.value == value) {
-					previous.next = current.next;
-					current.next.previous = previous;
-					this.length--;
-					return this.head;
+			} else if (!node.next) {
+				this.tail = node.previous;
+				if (!this.tail) {
+					this.head = null;
+				} else {
+					this.tail.next = null;
 				}
-				previous = current;
-				current = current.next;
+			} else {
+				node.previous.next = node.next;
+				node.next.previous = node.previous;
 			}
-			if (current.value == value) {
-				previous.next = null;
-				this.length--;
-			}
+			this.length--;
 			return this.head;
 		}
 		public deleteNodeByIndex(index) {
@@ -556,8 +186,8 @@ function startAdvancedAnimation(advancedOffsetNumber, speed) {
 				}
 			}
 		}
-		public makeAlive(index) {
-			linkedPixels.deleteNodeByIndexFromBack(index);
+		public makeAlive(node) {
+			linkedPixels.deleteNodeByNode(node);
 			this.setNeighbour();
 			data32[this.x + this.y * stageSize] = this.color;
 		}
@@ -574,21 +204,21 @@ function startAdvancedAnimation(advancedOffsetNumber, speed) {
 			data32[x + y * stageSize] = pixel2DArray[y][x].color;
 		}
 	}
-
+		let globc: number = 0;
+		let globcup = true;
 	function getNextPixel(data32) {
 		//let randomIndex = 1;
 
-		//let randomIndex = Math.floor(Math.random() * linkedPixels.length);
+		let randomIndex = Math.floor(Math.random() * linkedPixels.length);
 
-		let randomIndex = 0;
+		/*let randomIndex = 0;
 		if (linkedPixels.length > advancedOffsetNumber) {
 			randomIndex = advancedOffsetNumber;
-		}
+		}*/
+		let node = linkedPixels.getNodeByIndex(randomIndex);
 
-		let pixel = linkedPixels.getValueByIndexFromBack(randomIndex);
-
-		if (pixel) {
-			pixel.makeAlive(randomIndex);
+		if (node) {
+			node.value.makeAlive(node);
 		} else {
 			clearInterval(intervalIndex);
 		}
@@ -631,7 +261,7 @@ function startAdvancedAnimation(advancedOffsetNumber, speed) {
 	}*/
 
 
-	activatePixel(stageSize / 2, stageSize / 2, 0xFFFF0000, true);
+	activatePixel(1, 1, 0xFFFF0000, true);
 
 	/*activatePixel(200, 200, 0xFFFF0000, true);
 	activatePixel(600, 200, 0xFF00FF00, true);
@@ -777,7 +407,7 @@ function start() {
 	colorArray1();
 
 	let animationTypes: Array<AnimationTypes> = new Array<AnimationTypes>();
-	animationTypes.push(new AnimationTypes("spread", 0, startSpreadAnimation, { sliderSpeed: { min: 1, max: 50000 } }));
+	//animationTypes.push(new AnimationTypes("spread", 0, startSpreadAnimation, { sliderSpeed: { min: 1, max: 50000 } }));
 	animationTypes.push(new AnimationTypes("advanced", 0, startAdvancedAnimation, { sliderSpeed: { min: 1, max: 50000 } }));
 	animationTypes.push(new AnimationTypes("spiral", 13, startSpiralAnimation, { sliderSpeed: { min: 1, max: 50000 } }));
 }
