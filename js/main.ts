@@ -211,18 +211,159 @@ function startAdvancedAnimation(advancedOffsetNumber, speed) {
 		}
 	}
 
+	let _radixSort_0 = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+		0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+		0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+		0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+		0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+		0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+		0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+		0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+		0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+		0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+		0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+		0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+		0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+		0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+		0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+		0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0];
+	/*
+	RADIX SORT
+	Use 256 bins
+	Use shadow array
+	- Get counts
+	- Transform counts to pointers
+	- Sort from LSB - MSB
+	*/
+	function radixSort(intArr) {
+		var cpy = new Array(intArr.length);
+		var c4 = [].concat(_radixSort_0);
+		var c3 = [].concat(_radixSort_0);
+		var c2 = [].concat(_radixSort_0);
+		var c1 = [].concat(_radixSort_0);
+		var o4 = 0; var t4;
+		var o3 = 0; var t3;
+		var o2 = 0; var t2;
+		var o1 = 0; var t1;
+		var x;
+		for (x = 0; x < intArr.length; x++) {
+			t4 = intArr[x] & 0xFF;
+			t3 = (intArr[x] >> 8) & 0xFF;
+			t2 = (intArr[x] >> 16) & 0xFF;
+			t1 = (intArr[x] >> 24) & 0xFF ^ 0x80;
+			c4[t4]++;
+			c3[t3]++;
+			c2[t2]++;
+			c1[t1]++;
+		}
+		for (x = 0; x < 256; x++) {
+			t4 = o4 + c4[x];
+			t3 = o3 + c3[x];
+			t2 = o2 + c2[x];
+			t1 = o1 + c1[x];
+			c4[x] = o4;
+			c3[x] = o3;
+			c2[x] = o2;
+			c1[x] = o1;
+			o4 = t4;
+			o3 = t3;
+			o2 = t2;
+			o1 = t1;
+		}
+		for (x = 0; x < intArr.length; x++) {
+			t4 = intArr[x] & 0xFF;
+			cpy[c4[t4]] = intArr[x];
+			c4[t4]++;
+		}
+		for (x = 0; x < intArr.length; x++) {
+			t3 = (cpy[x] >> 8) & 0xFF;
+			intArr[c3[t3]] = cpy[x];
+			c3[t3]++;
+		}
+		for (x = 0; x < intArr.length; x++) {
+			t2 = (intArr[x] >> 16) & 0xFF;
+			cpy[c2[t2]] = intArr[x];
+			c2[t2]++;
+		}
+		for (x = 0; x < intArr.length; x++) {
+			t1 = (cpy[x] >> 24) & 0xFF ^ 0x80;
+			intArr[c1[t1]] = cpy[x];
+			c1[t1]++;
+		}
+		return intArr;
+	}
+
+	function _insertionSort(arr, left, right) {
+		var i, j, swap;
+		for (j = left + 1; j <= right; j++) {
+			swap = arr[j];
+			i = j - 1;
+			while (i >= left && arr[i] > swap) {
+				arr[i + 1] = arr[i--];
+			}
+			arr[i + 1] = swap;
+		}
+	}
+	function radixSortIP(intArr) {
+		_radixSortIP(intArr, 0, intArr.length, 24, 0x80);
+		return intArr;
+	}
+	function _radixSortIP(intArr, left, right, shift, xor) {
+		var end = [].concat(_radixSort_0);
+		var start = [].concat(_radixSort_0);
+		var elm = left;
+		var dig; var swap; var x; var next;
+		for (x = left; x < right; x++) {
+			dig = (intArr[x] >> shift) & 0xFF ^ xor;
+			end[dig]++;
+		}
+		// transform counts to pointers
+		for (x = 0; x < 256; x++) {
+			dig = elm + end[x];
+			start[x] = elm;
+			end[x] += elm;
+			elm = dig;
+		}
+		// sort array
+		for (x = left, next = 0; x < right;) {
+			elm = intArr[x];
+			while (start[dig = ((elm >> shift) & 0xFF ^ xor)] != x) {
+				swap = elm;
+				elm = intArr[start[dig]];
+				intArr[start[dig]++] = swap;
+			}
+			intArr[x] = elm;
+			start[dig]++;
+			while (start[next] == end[next] && next < 256) next++;
+			x = start[next];
+		}
+		// recurse
+		if (shift > 0) {
+			shift -= 8;
+			for (x = 0, next = left; x < 256; x++) {
+				dig = end[x] - next;
+				if (dig >= 24) {
+					_radixSortIP(intArr, next, end[x], shift, 0x00);
+				} else if (dig >= 2) {
+					_insertionSort(intArr, next, end[x]);
+				}
+				next = end[x];
+			}
+		}
+	}
+
 	function getNextPixel(data32) {
 		//let randomIndex = 1;
 
 		let randomIndex;
 		let reroll = true;
 		if (linkedPixels.length < freeIndexes.length) {
+			freeIndexes = radixSort(freeIndexes);
 			for (let a = 0; a < freeIndexes.length; a++) {
-				randomArray.splice(freeIndexes[a]);
-				freeIndexes.splice(a);
+				randomArray.splice(freeIndexes[a], 1);
 			}
+			freeIndexes = [];
 		}
-		console.log()
 		while (reroll) {
 			reroll = false;
 			randomIndex = Math.floor(Math.random() * randomArray.length);
@@ -233,10 +374,6 @@ function startAdvancedAnimation(advancedOffsetNumber, speed) {
 				}
 			}
 		} 
-		let randomIndex = 0;
-		if (linkedPixels.length > advancedOffsetNumber) {
-			randomIndex = advancedOffsetNumber;
-		}
 
 		let node = randomArray[randomIndex];
 		freeIndexes.push(randomIndex);
@@ -287,13 +424,13 @@ function startAdvancedAnimation(advancedOffsetNumber, speed) {
 	}*/
 
 
-	activatePixel(200, 200, 0xFFFF0000, true);
+	//activatePixel(200, 200, 0xFFFF0000, true);
 
-	/*activatePixel(200, 200, 0xFFFF0000, true);
+	activatePixel(200, 200, 0xFFFF0000, true);
 	activatePixel(600, 200, 0xFF00FF00, true);
 	activatePixel(200, 600, 0xFF0000FF, true);
 	activatePixel(600, 600, 0xFFFFFF00, true);
-	activatePixel(400, 400, 0xFF00FFFF, true);*/
+	activatePixel(400, 400, 0xFF00FFFF, true);
 
 	let interval = 1000 / 30;
 	let drawsPerTick = parseInt(speed) * 1;
