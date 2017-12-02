@@ -300,15 +300,6 @@ function startAdvancedAnimation(advancedOffsetNumber, speed) {
             arr[i + 1] = swap;
         }
     }
-    /*
-    RADIX SORT IN PLACE
-    Use recursion
-    Use 256 bins
-    Use insertion sort for small subsets (optized out of first iteration)
-    - Get counts
-    - Transform counts to start & end pointers
-    - In place sort MSB then recurse down the bins
-    */
     function radixSortIP(intArr) {
         _radixSortIP(intArr, 0, intArr.length, 24, 0x80);
         return intArr;
@@ -367,7 +358,7 @@ function startAdvancedAnimation(advancedOffsetNumber, speed) {
         var reroll = true;
         if (linkedPixels.length < freeIndexes.length) {
             freeIndexes = radixSort(freeIndexes);
-            for (var a = 0; a < freeIndexes.length; a++) {
+            for (var a = freeIndexes.length - 1; a >= 0; a--) {
                 randomArray.splice(freeIndexes[a], 1);
             }
             freeIndexes = [];

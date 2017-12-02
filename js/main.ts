@@ -359,7 +359,7 @@ function startAdvancedAnimation(advancedOffsetNumber, speed) {
 		let reroll = true;
 		if (linkedPixels.length < freeIndexes.length) {
 			freeIndexes = radixSort(freeIndexes);
-			for (let a = 0; a < freeIndexes.length; a++) {
+			for (let a = freeIndexes.length-1; a >= 0; a--) {
 				randomArray.splice(freeIndexes[a], 1);
 			}
 			freeIndexes = [];
