@@ -37,12 +37,15 @@ function startAdvancedAnimation(advancedOffsetNumber, speed) {
                 var next = { value: value, previous: this.tail, next: null };
                 this.tail.next = next;
                 this.tail = next;
+                this.length++;
+                return next;
             }
             else {
                 this.head = { value: value, previous: null, next: null };
                 this.tail = this.head;
+                this.length++;
+                return this.head;
             }
-            this.length++;
         };
         LinkedPixels.prototype.getValueByIndex = function (index) {
             var current = this.head;
@@ -173,9 +176,14 @@ function startAdvancedAnimation(advancedOffsetNumber, speed) {
                 var tempY = this.y + axisArray[a + 1];
                 var tempX = this.x + axisArray[a];
                 if (tempX >= 0 && tempX < stageSize && tempY >= 0 && tempY < stageSize && !pixel2DArray[tempY][tempX]) {
-                    var pixel = new Pixel(tempX, tempY, colorArray[this.color]);
-                    linkedPixels.push(pixel);
-                    pixel2DArray[tempY][tempX] = pixel;
+                    var node = linkedPixels.push(new Pixel(tempX, tempY, colorArray[this.color]));
+                    pixel2DArray[tempY][tempX] = true;
+                    if (freeIndexes.length == 0) {
+                        randomArray.push(node);
+                    }
+                    else {
+                        randomArray[freeIndexes.pop()] = node;
+                    }
                 }
             }
         };
@@ -192,20 +200,37 @@ function startAdvancedAnimation(advancedOffsetNumber, speed) {
             if (addToArray) {
                 pixel.setNeighbour();
             }
-            pixel2DArray[y][x] = pixel;
-            data32[x + y * stageSize] = pixel2DArray[y][x].color;
+            pixel2DArray[y][x] = true;
+            data32[x + y * stageSize] = pixel.color;
         }
     }
-    var globc = 0;
-    var globcup = true;
     function getNextPixel(data32) {
         //let randomIndex = 1;
-        var randomIndex = Math.floor(Math.random() * linkedPixels.length);
+        var randomIndex;
+        var reroll = true;
+        if (linkedPixels.length < freeIndexes.length) {
+            for (var a = 0; a < freeIndexes.length; a++) {
+                randomArray.splice(freeIndexes[a]);
+                freeIndexes.splice(a);
+            }
+        }
+        console.log();
+        while (reroll) {
+            reroll = false;
+            randomIndex = Math.floor(Math.random() * randomArray.length);
+            for (var a = 0; a < freeIndexes.length; a++) {
+                if (freeIndexes[a] == randomIndex) {
+                    reroll = true;
+                    break;
+                }
+            }
+        }
         /*let randomIndex = 0;
         if (linkedPixels.length > advancedOffsetNumber) {
             randomIndex = advancedOffsetNumber;
         }*/
-        var node = linkedPixels.getNodeByIndex(randomIndex);
+        var node = randomArray[randomIndex];
+        freeIndexes.push(randomIndex);
         if (node) {
             node.value.makeAlive(node);
         }
@@ -215,12 +240,14 @@ function startAdvancedAnimation(advancedOffsetNumber, speed) {
     }
     var pixel2DArray = new Array();
     var linkedPixels = new LinkedPixels();
+    var randomArray = [];
+    var freeIndexes = [];
     imageData = ctx.createImageData(stageSize, stageSize);
     data32 = new Uint32Array(imageData.data.buffer);
     for (var a = 0; a < stageSize; a++) {
         pixel2DArray[a] = new Array();
         for (var b = 0; b < stageSize; b++) {
-            pixel2DArray[a][b] = null;
+            pixel2DArray[a][b] = false;
         }
     }
     /*let cc = 0;
@@ -245,7 +272,7 @@ function startAdvancedAnimation(advancedOffsetNumber, speed) {
     for (let a = 502; a < 800; a++) {
         activatePixel(400, a, 0xFF000000, false);
     }*/
-    activatePixel(1, 1, 0xFFFF0000, true);
+    activatePixel(200, 200, 0xFFFF0000, true);
     /*activatePixel(200, 200, 0xFFFF0000, true);
     activatePixel(600, 200, 0xFF00FF00, true);
     activatePixel(200, 600, 0xFF0000FF, true);
