@@ -173,7 +173,7 @@ function startAdvancedAnimation(advancedOffsetNumber, speed) {
 			return this.head;
 		}
 	}
-
+	let curColor = 0xFFFF0000;
 	class Pixel {
 		constructor(public x: number, public y: number, public color) {
 		}
@@ -183,6 +183,7 @@ function startAdvancedAnimation(advancedOffsetNumber, speed) {
 				let tempY = this.y + axisArray[a + 1];
 				let tempX = this.x + axisArray[a];
 				if (tempX >= 0 && tempX < stageSize && tempY >= 0 && tempY < stageSize && !pixel2DArray[tempY][tempX]) {
+					//curColor = colorArray[curColor];
 					let node = linkedPixels.push(new Pixel(tempX, tempY, colorArray[this.color]));
 					pixel2DArray[tempY][tempX] = true;
 					if (freeIndexes.length == 0) {
@@ -352,14 +353,17 @@ function startAdvancedAnimation(advancedOffsetNumber, speed) {
 		}
 	}
 
+	function sortNumber(a, b) {
+		return b - a;
+	}
 	function getNextPixel(data32) {
-		//let randomIndex = 1;
-
 		let randomIndex;
 		let reroll = true;
 		if (linkedPixels.length < freeIndexes.length) {
-			freeIndexes = radixSort(freeIndexes);
-			for (let a = freeIndexes.length-1; a >= 0; a--) {
+			freeIndexes.sort(sortNumber);
+			console.log(linkedPixels.length + "  " + freeIndexes.length)
+			//freeIndexes = radixSort(freeIndexes);
+			for (let a = 0; a < freeIndexes.length; a++) {
 				randomArray.splice(freeIndexes[a], 1);
 			}
 			freeIndexes = [];
@@ -401,8 +405,8 @@ function startAdvancedAnimation(advancedOffsetNumber, speed) {
 		}
 	}
 	/*let cc = 0;
-	for(let a = 0; a < 9; a++) {
-		for(let b = 0; b < 799; b++) {
+	for(let a = 0; a < 12; a++) {
+		for(let b = 0; b < 999; b++) {
 			if(cc%2==0)
 				activatePixel(b, a*80+30, 0x00000000, false);
 			else
@@ -424,13 +428,13 @@ function startAdvancedAnimation(advancedOffsetNumber, speed) {
 	}*/
 
 
-	//activatePixel(200, 200, 0xFFFF0000, true);
-
 	activatePixel(200, 200, 0xFFFF0000, true);
+
+	/*activatePixel(200, 200, 0xFFFF0000, true);
 	activatePixel(600, 200, 0xFF00FF00, true);
 	activatePixel(200, 600, 0xFF0000FF, true);
 	activatePixel(600, 600, 0xFFFFFF00, true);
-	activatePixel(400, 400, 0xFF00FFFF, true);
+	activatePixel(400, 400, 0xFF00FFFF, true);*/
 
 	let interval = 1000 / 30;
 	let drawsPerTick = parseInt(speed) * 1;
@@ -439,7 +443,39 @@ function startAdvancedAnimation(advancedOffsetNumber, speed) {
 	intervalIndex = setInterval(function() {
 		start = window.performance.now();
 		for (let a = 0; a < drawsPerTick; a++) {
-			getNextPixel(data32);
+			let randomIndex;
+			let reroll = true;
+			if (linkedPixels.length < freeIndexes.length) {
+				freeIndexes.sort(sortNumber);
+				console.log(linkedPixels.length + "  " + freeIndexes.length)
+				//freeIndexes = radixSort(freeIndexes);
+				for (let a = 0; a < freeIndexes.length; a++) {
+					randomArray.splice(freeIndexes[a], 1);
+				}
+				freeIndexes = [];
+			}
+			while (reroll) {
+				reroll = false;
+				randomIndex = Math.floor(Math.random() * randomArray.length);
+				for (let a = 0; a < freeIndexes.length; a++) {
+					if (freeIndexes[a] == randomIndex) {
+						reroll = true;
+						break;
+					}
+				}
+			}
+
+			let node = randomArray[randomIndex];
+			freeIndexes.push(randomIndex);
+
+			if (node) {
+				node.value.makeAlive(node);
+			} else {
+				clearInterval(intervalIndex);
+				if (linkedPixels.length == 0) {
+					break;
+				}
+			}
 		}
 		end = window.performance.now();
 		time = end - start;

@@ -165,6 +165,7 @@ function startAdvancedAnimation(advancedOffsetNumber, speed) {
         };
         return LinkedPixels;
     }());
+    var curColor = 0xFFFF0000;
     var Pixel = /** @class */ (function () {
         function Pixel(x, y, color) {
             this.x = x;
@@ -176,6 +177,7 @@ function startAdvancedAnimation(advancedOffsetNumber, speed) {
                 var tempY = this.y + axisArray[a + 1];
                 var tempX = this.x + axisArray[a];
                 if (tempX >= 0 && tempX < stageSize && tempY >= 0 && tempY < stageSize && !pixel2DArray[tempY][tempX]) {
+                    //curColor = colorArray[curColor];
                     var node = linkedPixels.push(new Pixel(tempX, tempY, colorArray[this.color]));
                     pixel2DArray[tempY][tempX] = true;
                     if (freeIndexes.length == 0) {
@@ -352,13 +354,17 @@ function startAdvancedAnimation(advancedOffsetNumber, speed) {
             }
         }
     }
+    function sortNumber(a, b) {
+        return b - a;
+    }
     function getNextPixel(data32) {
-        //let randomIndex = 1;
         var randomIndex;
         var reroll = true;
         if (linkedPixels.length < freeIndexes.length) {
-            freeIndexes = radixSort(freeIndexes);
-            for (var a = freeIndexes.length - 1; a >= 0; a--) {
+            freeIndexes.sort(sortNumber);
+            console.log(linkedPixels.length + "  " + freeIndexes.length);
+            //freeIndexes = radixSort(freeIndexes);
+            for (var a = 0; a < freeIndexes.length; a++) {
                 randomArray.splice(freeIndexes[a], 1);
             }
             freeIndexes = [];
@@ -395,8 +401,8 @@ function startAdvancedAnimation(advancedOffsetNumber, speed) {
         }
     }
     /*let cc = 0;
-    for(let a = 0; a < 9; a++) {
-        for(let b = 0; b < 799; b++) {
+    for(let a = 0; a < 12; a++) {
+        for(let b = 0; b < 999; b++) {
             if(cc%2==0)
                 activatePixel(b, a*80+30, 0x00000000, false);
             else
@@ -416,19 +422,50 @@ function startAdvancedAnimation(advancedOffsetNumber, speed) {
     for (let a = 502; a < 800; a++) {
         activatePixel(400, a, 0xFF000000, false);
     }*/
-    //activatePixel(200, 200, 0xFFFF0000, true);
     activatePixel(200, 200, 0xFFFF0000, true);
+    /*activatePixel(200, 200, 0xFFFF0000, true);
     activatePixel(600, 200, 0xFF00FF00, true);
     activatePixel(200, 600, 0xFF0000FF, true);
     activatePixel(600, 600, 0xFFFFFF00, true);
-    activatePixel(400, 400, 0xFF00FFFF, true);
+    activatePixel(400, 400, 0xFF00FFFF, true);*/
     var interval = 1000 / 30;
     var drawsPerTick = parseInt(speed) * 1;
     var start = 0, end = 0, time = 0;
     intervalIndex = setInterval(function () {
         start = window.performance.now();
         for (var a = 0; a < drawsPerTick; a++) {
-            getNextPixel(data32);
+            var randomIndex = void 0;
+            var reroll = true;
+            if (linkedPixels.length < freeIndexes.length) {
+                freeIndexes.sort(sortNumber);
+                console.log(linkedPixels.length + "  " + freeIndexes.length);
+                //freeIndexes = radixSort(freeIndexes);
+                for (var a_1 = 0; a_1 < freeIndexes.length; a_1++) {
+                    randomArray.splice(freeIndexes[a_1], 1);
+                }
+                freeIndexes = [];
+            }
+            while (reroll) {
+                reroll = false;
+                randomIndex = Math.floor(Math.random() * randomArray.length);
+                for (var a_2 = 0; a_2 < freeIndexes.length; a_2++) {
+                    if (freeIndexes[a_2] == randomIndex) {
+                        reroll = true;
+                        break;
+                    }
+                }
+            }
+            var node = randomArray[randomIndex];
+            freeIndexes.push(randomIndex);
+            if (node) {
+                node.value.makeAlive(node);
+            }
+            else {
+                clearInterval(intervalIndex);
+                if (linkedPixels.length == 0) {
+                    break;
+                }
+            }
         }
         end = window.performance.now();
         time = end - start;
